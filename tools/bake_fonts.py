@@ -122,6 +122,20 @@ CLUSTER_FONTS = [
     ('k_label_ro', 'Outfit[wght].ttf', 20, UPPER + 'ĂÂÎȘȚ' + DIGITS + ' .-+/%', 0, 'SemiBold'),
     ('k_scale_b', 'Outfit[wght].ttf', 27, DIGITS, 0, 'Medium'),
     ('k_mode', 'Outfit[wght].ttf', 24, UPPER + ' ', 0, 'Bold'),
+    # Artifact (tools/gen_artifact.py): Exo 2 Italic for the scale numbers and the big speed and gear, Exo 2 for the
+    # tyres and the bottom row, Outfit for the drive mode
+    ('x_scl', 'Exo2-Italic[wght].ttf', 31, DIGITS, 0, 'SemiBold Italic'),
+    ('x_sclr', 'Exo2-Italic[wght].ttf', 38, DIGITS, 0, 'Bold Italic'),
+    ('x_big', 'Exo2-Italic[wght].ttf', 96, DIGITS + '-', 0, 'ExtraBold Italic'),
+    ('x_gear', 'Exo2-Italic[wght].ttf', 92, 'PRNDSM-' + DIGITS, 0, 'ExtraBold Italic'),
+    ('x_mini', 'Exo2-Italic[wght].ttf', 23, DIGITS + '/', 0, 'SemiBold Italic'),
+    ('x_tyre', 'Exo2[wght].ttf', 34, DIGITS + '.-', 0, 'SemiBold'),
+    ('x_tunit', 'Exo2[wght].ttf', 23, LOWER + '°%CF ', 0, 'Regular'),
+    ('x_ttemp', 'Exo2[wght].ttf', 29, DIGITS + '-', 0, 'SemiBold'),
+    ('x_row', 'Exo2[wght].ttf', 40, DIGITS + ':.+-', 0, 'SemiBold'),
+    ('x_rowu', 'Exo2[wght].ttf', 26, LOWER + '°%CF ', 0, 'Regular'),
+    ('x_mode', 'Outfit[wght].ttf', 28, UPPER + ' ', 0, 'Medium'),
+    ('x_rowm', 'Outfit[wght].ttf', 26, UPPER + ' ', 0, 'SemiBold'),
 ]
 FONTS = {'aar_cluster_themes': CLUSTER_FONTS}   # HUD_FONTS: kept from upstream (HUD Widgets is not in this repo)
 PAD = 2

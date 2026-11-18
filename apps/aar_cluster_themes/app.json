@@ -2,7 +2,7 @@
   "id": "aar_cluster_themes",
   "title": "AAR Cluster Themes",
   "description": "AAR Cluster Themes: redraws the instrument cluster. Curved (after BMW's newer iDrive 8 clusters, colours by drive mode), Apex (AAR's sport dash with tyres), GT3 race dash, M-style, M view, Vector, Sport, Minimal, Track, Drag, Rally, Retro 80s, Cruise, Dyno or Ribbon. Based on bimmer-lab's Cluster Themes (MIT)",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "vendor": "custom",
   "loggingId": "AAR1",
   "iconGlyph": "AAR",
@@ -152,6 +152,10 @@
           "Bumerang"
         ],
         [
+          "artifact",
+          "Artifact"
+        ],
+        [
           "minimal",
           "Minimal"
         ],
@@ -246,6 +250,10 @@
           "Bumerang"
         ],
         [
+          "artifact",
+          "Artifact"
+        ],
+        [
           "minimal",
           "Minimal"
         ],
@@ -324,6 +332,10 @@
         [
           "bumerang",
           "Bumerang"
+        ],
+        [
+          "artifact",
+          "Artifact"
         ],
         [
           "minimal",
@@ -406,6 +418,10 @@
           "Bumerang"
         ],
         [
+          "artifact",
+          "Artifact"
+        ],
+        [
           "minimal",
           "Minimal"
         ],
@@ -444,6 +460,26 @@
       "label": "Show Waze map inside the theme",
       "type": "bool",
       "default": true
+    },
+    {
+      "key": "artCenter",
+      "label": "Artifact: the middle",
+      "type": "choice",
+      "default": "tyres",
+      "options": [
+        [
+          "tyres",
+          "Car and tyres"
+        ],
+        [
+          "values",
+          "Boost, oil, coolant, fuel"
+        ],
+        [
+          "none",
+          "Nothing"
+        ]
+      ]
     },
     {
       "key": "units",

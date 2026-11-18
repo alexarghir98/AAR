@@ -2303,4 +2303,210 @@ void main() {
 }
 `;
 
-module.exports = { shiftbar: SHIFTBAR, arc: ARC, revbar: REVBAR, lights: LIGHTS, fill: FILL, box: BOX, grid: GRID, segbar: SEGBAR, mdash: MDASH, mtach: MTACH, sdash: SDASH, boxes: BOXES, atext: ATEXT, meter: METER, gmeter: GMETER, revarc: REVARC, tiles: TILES, ribbon: RIBBON, deco: DECO, mview: MVIEW, vdash: VDASH, cdash: CDASH, adash: ADASH, bdash: BDASH };
+const XDASH = `// The Artifact theme (AAR, after the user's own mockup, Nov 2026) in one cluster-render "effect" layer (GLSL ES 1.00):
+// speed on a glass chevron frame at the left, revs on its mirror at the right (red from the redline), each lit brighter
+// from the bottom up to a white marker; a dark hexagon panel inside each frame with a bright edge and a glint towards
+// the middle, a glowing base line, a slanted segmented gauge inside each frame (fuel left, oil right), a car seen from
+// above in the middle with its tyre lines (u_car.w 0: none), and the Waze map window cut see-through with its edges
+// fading to black (u_feather). Each pixel draws its own half only, the right one in the left one's frame (mirrored).
+// v_uv (0,0) is the top-left.
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+varying vec2 v_uv;
+uniform vec2 u_size;
+uniform vec3 u_fy;        // the frames' y: top, vertex, bottom
+uniform vec3 u_fo;        // the left frame's outer edge: x at those three y
+uniform vec3 u_fi;        // its inner edge
+uniform vec2 u_scale;     // y of the 0 mark and of the top mark
+uniform vec4 u_val;       // speed, rpm, fuel, oil, 0..1
+uniform vec2 u_red;       // revs: red from, 0..1
+uniform vec3 u_c0;        // deep, accent, light
+uniform vec3 u_c1;
+uniform vec3 u_c2;
+uniform vec4 u_pan;       // the panel's right side: top x, top y, tip x, tip y
+uniform vec2 u_pan2;      // and its bottom x, y
+uniform vec4 u_base;      // the base line: y, left end x (the right end mirrored), 0, on
+uniform vec4 u_mini;      // the left mini gauge's line: top x, y, bottom x, y (the right one mirrored)
+uniform vec4 u_car;       // the car: centre x, y, scale, on
+uniform vec4 u_tyre;      // the tyre lines (left; mirrored): inner end x, top row y, bottom row y, length
+uniform vec4 u_hole;      // the map window, already inset (w 0 = none)
+uniform float u_holeR;
+uniform float u_feather;  // px the window's edge fades over
+uniform vec4 u_look;      // glow, oil hot from (0..1), fuel reserve below (0..1), 0
+
+const vec3 WHITE = vec3(0.95, 0.96, 0.99);
+const vec3 HOT = vec3(1.0, 0.16, 0.23);
+const vec3 PINK = vec3(1.0, 0.6, 0.66);
+const vec3 CYAN = vec3(0.25, 0.7, 1.0);
+
+float cov(float d) { return clamp(0.5 - d, 0.0, 1.0); }
+vec4 over(vec4 top, vec4 under) {
+    float a = top.a + under.a * (1.0 - top.a);
+    if (a <= 0.0) return vec4(0.0);
+    return vec4((top.rgb * top.a + under.rgb * under.a * (1.0 - top.a)) / a, a);
+}
+// x at y on a frame edge through the three y of u_fy
+float pw(float y, vec3 x) {
+    if (y <= u_fy.y) return mix(x.x, x.y, (y - u_fy.x) / (u_fy.y - u_fy.x));
+    return mix(x.y, x.z, (y - u_fy.y) / (u_fy.z - u_fy.y));
+}
+float seg(vec2 p, vec2 a, vec2 b) {
+    vec2 pa = p - a, ba = b - a;
+    return length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0));
+}
+float rbox(vec2 p, vec2 hs, float r) {
+    vec2 q = abs(p) - (hs - vec2(r));
+    return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+}
+
+void main() {
+    vec2 p = v_uv * u_size;
+    bool R = p.x > u_size.x * 0.5;
+    vec2 q = R ? vec2(u_size.x - p.x, p.y) : p;
+    float g = u_look.x;
+    vec2 vg = (p - vec2(u_size.x * 0.5, u_size.y * 0.46)) / u_size;
+    vec4 c = vec4(mix(vec3(0.043, 0.086, 0.15), vec3(0.0), clamp(length(vg * vec2(1.6, 2.2)) * 1.25, 0.0, 1.0)), 1.0);
+
+    // the hexagon panel inside this side's frame
+    float yt = u_pan.y, yb = u_pan2.y;
+    if (q.y > yt && q.y < yb) {
+        float xr = q.y < u_pan.w ? mix(u_pan.x, u_pan.z, (q.y - yt) / (u_pan.w - yt)) : mix(u_pan.z, u_pan2.x, (q.y - u_pan.w) / (yb - u_pan.w));
+        float xi = pw(clamp(q.y, u_fy.x, u_fy.z), u_fi);
+        if (q.x > xi && q.x < xr) {
+            float f = (q.y - yt) / (yb - yt);
+            vec3 pc = mix(R ? vec3(0.1, 0.08, 0.125) : vec3(0.055, 0.11, 0.18), vec3(0.02, 0.04, 0.07), smoothstep(0.0, 0.9, f));
+            if (q.y < u_pan.w && q.x > mix(xi, xr, 0.55)) pc += vec3(0.025, 0.05, 0.085) * (1.0 - f);
+            c.rgb = pc;
+        }
+    }
+    // its right side: a faint upper line, a bright lower one into the middle with a glint on it
+    vec2 gp = mix(u_pan.zw, u_pan2, 0.4);
+    float dl = seg(q, u_pan.zw, u_pan2);
+    c = over(vec4(0.24, 0.47, 0.76, 0.55 * cov(seg(q, u_pan.xy, u_pan.zw) - 0.8)), c);
+    c = over(vec4(u_c1, 0.5 * g * exp(-dl / 6.0)), c);
+    c = over(vec4(0.62, 0.84, 1.0, 0.9 * cov(dl - 0.9)), c);
+    vec2 gd = (q - gp) / 46.0;
+    c = over(vec4(0.75, 0.9, 1.0, 0.9 * exp(-dot(gd, gd) * 3.0)), c);
+    c = over(vec4(0.8, 0.92, 1.0, 0.6 * cov(abs(q.y - gp.y) - 0.6) * smoothstep(60.0, 0.0, abs(q.x - gp.x))), c);
+    // lines from the glint to the middle of the base, and a faint one from the panel's top
+    vec2 mid = vec2(u_size.x * 0.5, u_base.x - 2.0), kn = vec2(gp.x + 75.0, u_base.x - 27.0);
+    c = over(vec4(0.18, 0.44, 0.75, 0.45 * cov(min(seg(q, gp, kn), seg(q, kn, mid)) - 0.7)), c);
+    c = over(vec4(0.12, 0.25, 0.43, 0.35 * cov(seg(q, u_pan.xy, vec2(mid.x, u_base.x - 42.0)) - 0.6)), c);
+
+    // the base line, light at the frames, deeper blue in the middle
+    if (u_base.w > 0.5 && q.x > u_base.y) {
+        float dy = abs(p.y - u_base.x);
+        float fa = smoothstep(u_base.y, u_base.y + 60.0, q.x);
+        vec3 bc = mix(CYAN, vec3(0.12, 0.42, 1.0), smoothstep(u_base.y, mid.x, q.x));
+        c = over(vec4(bc, fa * (0.7 * g * exp(-dy / 5.0) + cov(dy - 1.6))), c);
+    }
+
+    // the frame: glass between the outer and inner edges, brighter from the bottom up to the value
+    float yc = clamp(q.y, u_fy.x, u_fy.z);
+    float xo = pw(yc, u_fo), bw = pw(yc, u_fi) - xo, d = q.x - xo;
+    float span = u_scale.x - u_scale.y, t = (u_scale.x - q.y) / span;
+    float val = R ? u_val.y : u_val.x, yv = u_scale.x - val * span;
+    bool red = R && t >= u_red.x;
+    bool on = val > 0.002;
+    vec3 acc = red ? HOT : u_c1;
+    bool inY = q.y >= u_fy.x && q.y <= u_fy.z;
+    if (on) {
+        // the glow round the lit part
+        float gl = length(max(vec2(max(-d, d - bw), max(yv - q.y, q.y - u_fy.z)), 0.0));
+        c = over(vec4(acc, 0.35 * g * exp(-gl / 14.0)), c);
+    }
+    if (inY && d > 0.0 && d < bw) {
+        float u = d / bw;
+        bool lit = on && q.y >= yv;
+        // crystal facets: a few big slanted planes along the band, each lighter at one end (a sawtooth)
+        float fct = 0.2 * fract(t * 4.2 + u * 0.85) * (1.0 - 0.5 * u);
+        vec3 gc = red ? mix(PINK, vec3(0.16, 0.03, 0.07), u) : mix(mix(u_c2, u_c1, 0.35), u_c0, u);
+        if (lit) gc = mix(gc, red ? vec3(1.0, 0.35, 0.4) : WHITE, 0.35 * (1.0 - u));
+        float a = (lit ? 0.98 - 0.4 * u : 0.75 - 0.4 * u) + fct;
+        c = over(vec4(gc + fct * 0.5, clamp(a, 0.0, 1.0)), c);
+    }
+    // the edges: the outer one bright with a glow (a thick red stripe from the redline up), the inner one thin
+    float dOut = min(seg(q, vec2(u_fo.x, u_fy.x), vec2(u_fo.y, u_fy.y)), seg(q, vec2(u_fo.y, u_fy.y), vec2(u_fo.z, u_fy.z)));
+    float dIn = min(seg(q, vec2(u_fi.x, u_fy.x), vec2(u_fi.y, u_fy.y)), seg(q, vec2(u_fi.y, u_fy.y), vec2(u_fi.z, u_fy.z)));
+    c = over(vec4(red ? HOT : CYAN, 0.55 * g * exp(-dOut / (red ? 9.0 : 7.0))), c);
+    c = over(vec4(red ? HOT : vec3(0.75, 0.89, 1.0), cov(dOut - (red ? 3.0 : 1.3))), c);
+    c = over(vec4(0.44, 0.71, 1.0, 0.75 * cov(dIn - 0.8)), c);
+    // the top edge running on towards the middle
+    float tl = (q.x - u_fo.x) / 440.0;
+    if (tl > 0.0 && tl < 1.0) {
+        float dyt = abs(q.y - u_fy.x);
+        c = over(vec4(R ? vec3(1.0, 0.48, 0.54) : vec3(0.5, 0.75, 1.0), (1.0 - tl) * (0.9 * cov(dyt - 0.9) + 0.4 * g * exp(-dyt / 4.0))), c);
+    }
+    // the marker: a white bar across the band, a little wider than it, with a glow
+    if (on) {
+        float xv = pw(clamp(yv, u_fy.x, u_fy.z), u_fo), xw = pw(clamp(yv, u_fy.x, u_fy.z), u_fi);
+        float ax = max(xv - 10.0 - q.x, q.x - xw - 10.0), ady = abs(q.y - yv);
+        c = over(vec4(red ? PINK : u_c2, min(1.0, 0.6 * g) * exp(-max(ady - 3.0, 0.0) / 7.0) * exp(-max(ax + 4.0, 0.0) / 8.0)), c);
+        c = over(vec4(1.0, 1.0, 1.0, cov(ady - 2.5) * cov(ax)), c);
+    }
+    // the marks outside the outer edge: one at every number, a short one between
+    if (t > -0.004 && t < 1.004) {
+        float tk = t * 16.0, k = floor(tk + 0.5);
+        float dm = abs(tk - k) / 16.0 * span;
+        bool major = mod(k, 2.0) < 0.5;
+        float L = major ? 16.0 : 7.0, xs = xo - 5.0 - q.x;
+        c = over(vec4(R && t >= u_red.x - 0.002 ? HOT : WHITE, (major ? 0.85 : 0.45) * cov(dm - 1.1) * cov(abs(xs - L * 0.5) - L * 0.5)), c);
+    }
+    // the glare at the vertex and at the bottom of the frame
+    vec2 gv = (q - vec2(u_fo.y + 10.0, u_fy.y)) / vec2(46.0, 25.0), gb = (q - vec2(u_fo.z + 12.0, u_fy.z - 8.0)) / vec2(60.0, 33.0);
+    c = over(vec4(red ? PINK : vec3(0.9, 0.96, 1.0), 0.95 * exp(-dot(gv, gv) * 2.5)), c);
+    c = over(vec4(0.9, 0.96, 1.0, 0.9 * exp(-dot(gb, gb) * 2.5)), c);
+
+    // the mini gauge: ten slanted segments along a white line, lit from the bottom (fuel left, oil right)
+    vec2 ma = u_mini.xy, md = u_mini.zw - u_mini.xy;
+    float ml = length(md);
+    vec2 mn = md / ml;
+    float al = dot(q - ma, mn) / ml, ao = dot(q - ma, vec2(mn.y, -mn.x));
+    if (al > 0.0 && al < 1.0) {
+        float mv = R ? u_val.w : u_val.z, k = floor(al * 10.0);
+        if (ao > 4.0 && ao < 19.0 && fract(al * 10.0) < 0.82) {
+            bool ml2 = mv > 0.002 && 1.0 - (k + 0.5) / 10.0 < mv;
+            bool warn = R ? mv >= u_look.y : mv < u_look.z;
+            vec3 sc = ml2 ? (warn ? HOT : vec3(0.85, 0.88, 0.93)) : (!R && k >= 8.0 ? vec3(0.35, 0.1, 0.13) : vec3(0.23, 0.25, 0.3));
+            c = over(vec4(sc, cov(4.0 - ao) * cov(ao - 19.0)), c);
+        }
+        c = over(vec4(WHITE, cov(abs(ao) - 1.2)), c);
+    }
+
+    // the car seen from above, with its tyre lines (screen frame, front at the top)
+    if (u_car.w > 0.5) {
+        vec2 cp = (p - u_car.xy) / u_car.z;
+        float bd = rbox(cp, vec2(36.0, 93.0), 12.0) * u_car.z;
+        c = over(vec4(0.12, 0.42, 1.0, 0.6 * exp(-max(bd, 0.0) / 10.0)), c);
+        vec3 cc = mix(vec3(0.05, 0.31, 0.72), vec3(0.23, 0.55, 0.96), 1.0 - abs(cp.x) / 36.0);
+        float wsw = mix(27.0, 21.0, clamp((cp.y + 43.0) / 38.0, 0.0, 1.0)), rww = mix(21.0, 25.0, clamp((cp.y - 42.0) / 30.0, 0.0, 1.0));
+        if (cp.y > -43.0 && cp.y < -5.0 && abs(cp.x) < wsw) cc = mix(vec3(0.02, 0.04, 0.08), vec3(0.04, 0.09, 0.19), (cp.y + 43.0) / 38.0);
+        else if (cp.y >= -5.0 && cp.y < 42.0 && abs(cp.x) < 21.0) cc = vec3(0.17, 0.48, 0.92);
+        else if (cp.y >= 42.0 && cp.y < 72.0 && abs(cp.x) < rww) cc = fract((cp.y - 42.0) / 5.0) < 0.25 ? vec3(0.09, 0.2, 0.37) : vec3(0.02, 0.05, 0.1);
+        else if (cp.y > -77.0 && cp.y < -65.0 && abs(cp.x) < 8.0) cc = vec3(0.04, 0.14, 0.28);
+        c = over(vec4(cc, cov(bd)), c);
+        c = over(vec4(0.61, 0.8, 1.0, cov(abs(bd) - 0.8)), c);
+        c = over(vec4(0.17, 0.48, 0.92, cov(rbox(vec2(abs(cp.x) - 39.0, cp.y + 27.0), vec2(3.0, 4.0), 1.0) * u_car.z)), c);
+        // the tyre lines: short glowing lines under each pressure, brightest in the middle
+        float lx = (q.x - (u_tyre.x - u_tyre.w)) / u_tyre.w;
+        if (lx > -0.1 && lx < 1.1) {
+            float dyy = min(abs(q.y - u_tyre.y), abs(q.y - u_tyre.z));
+            float la = clamp(1.0 - abs(lx * 2.0 - 1.0), 0.0, 1.0) * 0.8 + 0.2;
+            float inx = cov(-lx * u_tyre.w) * cov((lx - 1.0) * u_tyre.w);
+            c = over(vec4(CYAN, inx * la * (cov(dyy - 1.5) + 0.5 * g * exp(-dyy / 3.0))), c);
+        }
+    }
+
+    // the Waze map window: cut see-through, its edge fading to black over u_feather px
+    if (u_hole.z > 0.0) {
+        vec2 hs = u_hole.zw * 0.5;
+        c.a *= smoothstep(-u_feather, 0.0, rbox(p - (u_hole.xy + hs), hs, u_holeR));
+    }
+    gl_FragColor = c;
+}
+`;
+
+module.exports = { shiftbar: SHIFTBAR, arc: ARC, revbar: REVBAR, lights: LIGHTS, fill: FILL, box: BOX, grid: GRID, segbar: SEGBAR, mdash: MDASH, mtach: MTACH, sdash: SDASH, boxes: BOXES, atext: ATEXT, meter: METER, gmeter: GMETER, revarc: REVARC, tiles: TILES, ribbon: RIBBON, deco: DECO, mview: MVIEW, vdash: VDASH, cdash: CDASH, adash: ADASH, bdash: BDASH, xdash: XDASH };

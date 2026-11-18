@@ -76,6 +76,18 @@ AAR's own sport dash.
 <p align="center"><img src="../../docs/images/cluster-apex.png" width="900" alt="Apex theme"></p>
 <p align="center"><img src="../../docs/images/cluster-apex-sport.png" width="900" alt="Apex theme in Sport"></p>
 
+### Artifact
+
+After the owner's own mockup: speed and revs on glass chevron frames, blue, with the redline in red.
+
+- **Left and right:** each frame lights up brighter from the bottom up to a white marker; the numbers sit outside it and the one nearest the value lights up. Speed on BMW's spacing (0 to 200 mph or 0 to 320 km/h), revs 0 to 8000, red from your redline.
+- **Inside the frames:** the speed and the gear in big italic figures with the drive mode under the gear, a slanted fuel gauge on the left (full, half, empty; red in reserve) and an oil temperature gauge on the right (50 to 150 °C; red past your oil warning).
+- **Middle, by the setting "Artifact: the middle":** a car seen from above with each tyre's pressure and temperature, the four readouts (boost, oil, coolant, fuel), or nothing.
+- **The Waze map:** with "Show Waze map inside the theme" on, while the phone's map shows (Maps on cluster, Central display area on Map view) the middle opens without a frame, its edges fading to black, and the car or readouts step aside.
+- **Bottom:** the range, the clock, the drive mode before BMW's own gear letter, the outside temperature and the coolant.
+
+<p align="center"><img src="../../docs/images/cluster-artifact.png" width="900" alt="Artifact theme"></p>
+
 ### Lame and Bumerang
 
 AAR's own blade themes, blue for speed and red for revs, with the Waze map framed in the middle.

@@ -2,7 +2,7 @@
 
 <img src="apps/aar_cluster_themes/icon.png" width="72" align="left" alt="AAR Cluster Themes icon">
 
-Redraws the whole instrument cluster of a BMW with iDrive 7 (MGU) in a theme of your choice, installed through the community MGU Store. AAR's own themes: **Curved**, after BMW's newer clusters (iDrive 8 / 8.5 Curved Display), **Apex**, a sport dash with light columns for speed and revs and a car seen from above with every tyre's pressure and temperature, and **Lame** and **Bumerang**, blue and red blades for speed and revs with the Waze map framed in the middle (straight leaning blades, or boomerangs with stronger colours). Curved's and Apex's colours follow the drive mode: blue in Comfort, orange-red in Sport, red in Sport Plus, teal in Eco Pro. All of bimmer-lab's themes are here too: GT3, M, M view, Vector, Sport, Minimal, Track, Drag, Rally, Retro 80s, Cruise, Dyno and Ribbon. [Read more](apps/aar_cluster_themes/README.md)
+Redraws the whole instrument cluster of a BMW with iDrive 7 (MGU) in a theme of your choice, installed through the community MGU Store. AAR's own themes: **Curved**, after BMW's newer clusters (iDrive 8 / 8.5 Curved Display), **Apex**, a sport dash with light columns for speed and revs and a car seen from above with every tyre's pressure and temperature, **Artifact**, glass chevron frames for speed and revs with the car's tyres or the Waze map (fading to black) in the middle, and **Lame** and **Bumerang**, blue and red blades for speed and revs with the Waze map framed in the middle (straight leaning blades, or boomerangs with stronger colours). Curved's and Apex's colours follow the drive mode: blue in Comfort, orange-red in Sport, red in Sport Plus, teal in Eco Pro. All of bimmer-lab's themes are here too: GT3, M, M view, Vector, Sport, Minimal, Track, Drag, Rally, Retro 80s, Cruise, Dyno and Ribbon. [Read more](apps/aar_cluster_themes/README.md)
 
 AAR Cluster Themes is a fork of [bimmer-lab/apps](https://github.com/bimmer-lab/apps) (Cluster Themes 0.19.0, MIT) with its own app id, `aar_cluster_themes`, so it installs next to bimmer-lab's Cluster Themes without a conflict.
 
@@ -10,6 +10,7 @@ AAR Cluster Themes is a fork of [bimmer-lab/apps](https://github.com/bimmer-lab/
 <p align="center"><img src="docs/images/cluster-curved-sport.png" width="900" alt="Curved theme in Sport"></p>
 <p align="center"><img src="docs/images/cluster-apex.png" width="900" alt="Apex theme"></p>
 <p align="center"><img src="docs/images/cluster-apex-sport.png" width="900" alt="Apex theme in Sport"></p>
+<p align="center"><img src="docs/images/cluster-artifact.png" width="900" alt="Artifact theme"></p>
 <p align="center"><img src="docs/images/cluster-lame.png" width="900" alt="Lame theme"></p>
 <p align="center"><img src="docs/images/cluster-bumerang.png" width="900" alt="Bumerang theme"></p>
 

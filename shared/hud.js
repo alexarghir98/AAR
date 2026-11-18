@@ -122,6 +122,14 @@
  *             coolant, fuel] each [x0, y, w], "stripe" [x, y, long, short] (the left two-tone stripe; the right one
  *             mirrored), "zone" [cx, cy, rx, ry] (the left colour pool), "base" [y, x0, x1]. The map window as fill
  *             ("hole", "holeWhen", "holeInset", "holeRadius"); "mapLive" works with it.
+ *   xdash     effect layer; the whole Artifact theme (shaders.js xdash, layout made by tools/gen_artifact.py), after the
+ *             user's own mockup: "fy" [yTop, yVertex, yBottom], "fo" / "fi" [x at those y] (the left frame's outer and
+ *             inner edge; the right frame is its mirror), "scale" [y of 0, y of the top mark], "rpmMax", "colors" [[deep],
+ *             [accent], [light]] (rgb 0-255), "pan" [topX, topY, tipX, tipY, bottomX, bottomY] (the right side of the
+ *             dark panel inside the left frame), "base" [y, leftX], "mini" [topX, topY, bottomX, bottomY] (the left mini
+ *             gauge, fuel; the right one, oil, mirrored), "car" [cx, cy, scale] with "carWhen" (a toggle: the car and
+ *             its "tyre" lines [innerX, topY, bottomY, length] only while on), "glow". The map window as fill ("hole",
+ *             "holeWhen", "holeInset", "holeRadius") plus "holeFeather" px: its edge fades to black.
  *   segbar    effect layer; "max" segments, the first round(signal) lit (e.g. "setupLevel:engine"), "slant" px
  *   icon      image layer; a line icon from icons.js ("icon": gauge, shock, wheel, cog, stack, therm, oilcan, fuel)
  *   arc also takes "start" and "sweep" in degrees (clockwise from 12 o'clock; negative = anticlockwise)
@@ -2150,6 +2158,29 @@ class HudApp {
             c.uniform(ref, 'u_strip', w.strip);
             c.uniform(ref, 'u_topEnd', [w.topEnd]);
             c.uniform(ref, 'u_road', w.road ? [w.road[0], w.road[1], 0, 1] : [0, 1, 0, 0]);
+        } else if (w.type === 'xdash') {
+            const X = (v) => v - w.x, Y = (v) => v - w.y;
+            const rgb3 = (a) => [a[0] / 255, a[1] / 255, a[2] / 255];
+            c.uniform(ref, 'u_size', [w.w, w.h]);
+            c.uniform(ref, 'u_fy', w.fy.map(Y));
+            c.uniform(ref, 'u_fo', w.fo.map(X));
+            c.uniform(ref, 'u_fi', w.fi.map(X));
+            c.uniform(ref, 'u_scale', [Y(w.scale[0]), Y(w.scale[1])]);
+            c.uniform(ref, 'u_red', [this._redMarks(w.rpmMax || 8000)[0], 0]);
+            ['u_c0', 'u_c1', 'u_c2'].forEach((u, i) => c.uniform(ref, u, rgb3(w.colors[i])));
+            c.uniform(ref, 'u_pan', [X(w.pan[0]), Y(w.pan[1]), X(w.pan[2]), Y(w.pan[3])]);
+            c.uniform(ref, 'u_pan2', [X(w.pan[4]), Y(w.pan[5])]);
+            c.uniform(ref, 'u_base', w.base ? [Y(w.base[0]), X(w.base[1]), 0, 1] : [0, 0, 0, 0]);
+            c.uniform(ref, 'u_mini', [X(w.mini[0]), Y(w.mini[1]), X(w.mini[2]), Y(w.mini[3])]);
+            const carOn = !!w.car && (!w.carWhen || this._toggleOn(w.carWhen));
+            c.uniform(ref, 'u_car', carOn ? [X(w.car[0]), Y(w.car[1]), w.car[2], 1] : [0, 0, 1, 0]);
+            c.uniform(ref, 'u_tyre', carOn && w.tyre ? [X(w.tyre[0]), Y(w.tyre[1]), Y(w.tyre[2]), w.tyre[3]] : [0, -100, -100, 1]);
+            c.uniform(ref, 'u_hole', this._hole(w));
+            c.uniform(ref, 'u_holeR', [this._holeRadius(w)]);
+            c.uniform(ref, 'u_feather', [w.holeFeather || 0]);
+            const warnOil = this.setting('warnOil');
+            c.uniform(ref, 'u_look', [w.glow || 1, ((isNum(warnOil) && warnOil > 0 ? warnOil : 130) - 50) / 100, 0.15, 0]);
+            c.uniform(ref, 'u_val', [0, 0, 0, 0]);
         } else if (w.type === 'bdash') {
             const X = (v) => v - w.x, Y = (v) => v - w.y;
             const rgb = (a) => [a[0] / 255, a[1] / 255, a[2] / 255];
@@ -2833,6 +2864,20 @@ class HudApp {
             x.c.uniform(x.ref, 'u_rpm', [vals[1]]);
             x.c.uniform(x.ref, 'u_fuel', [vals[2]]);
             x.c.uniform(x.ref, 'u_oil', [vals[3]]);
+        } else if (w.type === 'xdash') {
+            const us = this.setting('units') === 'us';
+            const sp = this._raw('speed'), rpm = this._raw('rpm'), fuel = this._raw('fuel'), oil = this._raw('oil');
+            const q = (v) => Math.round(Math.min(1, Math.max(0, v)) * 500) / 500;
+            const vals = [
+                q(isNum(sp) ? scaleFrac(us ? sp * 0.621371 : sp, SPEED_SCALE[us ? 'us' : 'metric']) : 0),
+                q(isNum(rpm) ? rpm / (w.rpmMax || 8000) : 0),
+                q(isNum(fuel) ? fuel : 0),
+                q(isNum(oil) ? (oil - 50) / 100 : 0),
+            ];
+            const key = vals.join('|');
+            if (!force && key === x.last) return;
+            x.last = key;
+            x.c.uniform(x.ref, 'u_val', vals);
         } else if (w.type === 'bdash') {
             const us = this.setting('units') === 'us';
             const sp = this._raw('speed'), rpm = this._raw('rpm'), boost = this._raw('boost');

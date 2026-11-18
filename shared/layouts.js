@@ -34,6 +34,7 @@ const TYPES = {
     cdash: ['arc', 'band', 'ticks'],
     adash: ['col', 'ticks'],
     bdash: ['shape', 'xo', 'left', 'right', 'look'],
+    xdash: ['fy', 'fo', 'fi', 'scale', 'colors', 'pan', 'mini'],
     mtach: ['side', 'y0', 'y8', 'ym', 'xm', 'kTop', 'kBot', 'wBot', 'wTop'],
     icon: ['icon'],
     swatch: [],

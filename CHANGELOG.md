@@ -2,6 +2,12 @@
 
 Newest first. Dates are when the build was pushed.
 
+## Nov 19 2026: AAR Cluster Themes 1.3.0
+
+- **New theme: Artifact,** after the owner's own mockup. Speed and revs on glass chevron frames that light up brighter from the bottom to a white marker, the redline in red, big italic figures for the speed and the gear, a slanted fuel gauge and an oil temperature gauge inside the frames. In the middle, by the new setting "Artifact: the middle": a car seen from above with each tyre's pressure and temperature, the four readouts, or nothing. While the Waze map shows, the middle opens without a frame and its edges fade to black. One shader (xdash), layout from tools/gen_artifact.py, 8 layers on one connection. New fonts: Exo 2 (SIL OFL).
+- **The app's page on the center screen is red, black and white** instead of BMW blue (tabs, buttons, switches, the selected theme, the Settings sheet).
+- Not yet tested on a car.
+
 ## Nov 18 2026: AAR Cluster Themes 1.2.2
 
 - **The Waze map shows inside the theme again with Maps on cluster 0.10.** It no longer takes the "start panel" command the app sent (the theme stayed on "Moving the map into the theme"); its map stays in BMW's map slot. The theme now opens its window over that slot while the map shows. Needs the car's Instrument cluster > Central display area on Map view; BMW's map-view marks show in the window too.

@@ -28,9 +28,11 @@ const tz = require('./tz');
 
 const W = 1600, H = 520;
 const A = G.withAlpha;
+// AAR's page: red, black and white (Nov 19 2026; bimmer-lab's was BMW blue)
 const C = {
-    bg: '#05070a', glow: '#0d1a2e', text: '#eef2f8', dim: '#8a96a8', label: '#6f7b8f', line: '#ffffff12',
-    blue: '#2b7fff', blueHi: '#5aa2ff', blueDeep: '#1c69d4', live: '#7fd3a0', off: '#c3cad6',
+    bg: '#050505', glow: '#1c0608', text: '#f2f2f2', dim: '#9a9a9f', label: '#77777c', line: '#ffffff12',
+    acc: '#d71f2b', accHi: '#ff5a64', accDeep: '#8e0f18', live: '#7fd3a0', off: '#c8c8cc',
+    card: '#1a1a1c', cardLo: '#0b0b0c',
 };
 const RAIL = { x: 16, y: 54, w: 252, h: 66, gap: 8 };
 const RAIL7 = { x: 16, y: 54, w: 252, h: 58, gap: 6 };     // seven tabs or more: a little shorter, so they fit
@@ -49,8 +51,11 @@ const TAB = {
     settings: { name: 'Settings', icon: 'cog' },
 };
 
-// the kit's own chrome (header, bar, Settings sheet) in BMW blue, to match the page
-Object.assign(themes.THEMES.m_tricolour, { sel: C.blue, selText: '#ffffff', accent2: C.blueHi, bg: C.bg });
+// the kit's own chrome (header, bar, Settings sheet) in the page's red, black and white
+Object.assign(themes.THEMES.m_tricolour, {
+    sel: C.acc, selText: '#ffffff', accent2: C.accHi, bg: C.bg, panelTop: '#171719', panelBottom: '#0a0a0b',
+    panelEdge: '#2a2a2e', track: '#1e1e21', tick: '#55555b', text: '#f4f4f4', dim: C.dim,
+});
 
 class Page {
     constructor(ctx, hud, cfg) {
@@ -140,7 +145,7 @@ class Page {
         const bottom = G.pageBottom(cv);
         const h = bottom + 8;
         cv.clear(C.bg);
-        cv.gradientRect(0, 0, W, h, [[0, C.glow], [0.55, '#070a10'], [1, C.bg]]);
+        cv.gradientRect(0, 0, W, h, [[0, C.glow], [0.55, '#080707'], [1, C.bg]]);
         const on = this.hud.activeName && this.hud.activeName !== 'off';
         const dd = this.hud.car && this.hud.car.data(), demo = dd && dd.demo;
         G.frame(cv, this.theme(), [], -1, [
@@ -171,8 +176,8 @@ class Page {
         const playing = hud.demoPlaying(), why = playing ? null : hud.demoBlocked();
         const text = playing ? 'Stop demo' : 'Play demo', h = 36, y = 44;
         const w = cv.textWidth(text, 16, { font: 'bold', literal: true }) + 62, x = CR - w;
-        cv.roundRect(x, y, w, h, h / 2, playing ? '#ffffff14' : why ? '#ffffff12' : C.blue);
-        if (playing) cv.strokeRoundRect(x, y, w, h, h / 2, 1, A(C.blueHi, 0.6));
+        cv.roundRect(x, y, w, h, h / 2, playing ? '#ffffff14' : why ? '#ffffff12' : C.acc);
+        if (playing) cv.strokeRoundRect(x, y, w, h, h / 2, 1, A(C.accHi, 0.6));
         const ic = why ? C.dim : '#ffffff', ix = x + 22, iy = y + h / 2;
         if (playing) cv.fillRect(ix - 6, iy - 6, 12, 12, ic);
         else cv.quad([[ix - 5, iy - 8], [ix + 8, iy], [ix + 8, iy], [ix - 5, iy + 8]], ic);
@@ -181,7 +186,7 @@ class Page {
         const info = playing ? 'Playing on the ' + what + ' · ' + Math.ceil(hud.demoLeft() / 1000) + ' s'
             : why === 'moving' ? 'Stop the car to play the demo' : why === 'off' ? 'Pick a ' + (what === 'HUD' ? 'layout' : 'theme') + ' to play the demo'
                 : why ? 'The ' + what + ' is not drawing yet' : '';
-        if (info) cv.text(info, x - 16, y + 24, 15, playing ? C.blueHi : C.dim, { align: 'right', literal: true });
+        if (info) cv.text(info, x - 16, y + 24, 15, playing ? C.accHi : C.dim, { align: 'right', literal: true });
         if (!why) cv.target(x, y, w, h, () => { if (hud.demoPlaying()) hud.stopDemo(); else hud.playDemo(); this.kick(); }, 'demo:play', h / 2);
     }
 
@@ -191,13 +196,13 @@ class Page {
         this.cfg.tabs.forEach((id, i) => {
             const x = R.x, y = R.y + i * (R.h + R.gap), w = R.w, h = R.h, sel = id === this.tab;
             if (sel) {
-                cv.card(x, y, w, h, 12, [[0, A(C.blue, 0.30)], [1, A(C.blueDeep, 0.10)]]);
-                cv.strokeRoundRect(x, y, w, h, 12, 1, A(C.blueHi, 0.35));
-                cv.roundRect(x, y + 12, 4, h - 24, 2, C.blue);
+                cv.card(x, y, w, h, 12, [[0, A(C.acc, 0.30)], [1, A(C.accDeep, 0.10)]]);
+                cv.strokeRoundRect(x, y, w, h, 12, 1, A(C.accHi, 0.35));
+                cv.roundRect(x, y + 12, 4, h - 24, 2, C.acc);
             }
             icon(cv, (TAB[id] || {}).icon, x + 34, y + h / 2, sel ? C.text : C.dim);
             cv.text(this.tabName(id), x + 64, y + 30 - dy, 21, sel ? '#ffffff' : C.text, { font: 'bold', literal: true });
-            cv.text(this.tabValue(id), x + 64, y + 53 - dy * 1.5, 15, sel ? A(C.blueHi, 0.95) : C.dim, { literal: true });
+            cv.text(this.tabValue(id), x + 64, y + 53 - dy * 1.5, 15, sel ? A(C.accHi, 0.95) : C.dim, { literal: true });
             cv.target(x, y, w, h, () => { this.tab = id; this.picker = null; this.kick(); }, 'tab:' + id, 12);
         });
     }
@@ -258,7 +263,7 @@ class Page {
         const h = 52;
         glass(cv, x, y, w, h, false);
         cv.text(name, x + 14, y + 20, 14, C.dim, { literal: true });
-        cv.text(this.layoutName(this.get(key)), x + 14, y + 42, 18, C.blueHi, { font: 'bold', literal: true });
+        cv.text(this.layoutName(this.get(key)), x + 14, y + 42, 18, C.accHi, { font: 'bold', literal: true });
         chevron(cv, x + w - 18, y + h / 2, C.dim);
         cv.target(x, y, w, h, () => { this.picker = { key, title: name, fmt: (v) => this.layoutName(v) }; this.kick(); }, 'set:' + key, 14);
     }
@@ -280,7 +285,7 @@ class Page {
             if (v === 'off') {
                 // the off switch: BMW's own HUD in every drive mode
                 cv.target(x, y, cw, ch, () => { this.set('byMode', false); this.chooseLayout('hudLayout', 'off'); }, 'look:off', 16);
-                cv.text(sel ? 'HUD is off' : 'Tap to turn the HUD off', x + 12, ty + 30, 14, sel ? C.blueHi : C.dim, { literal: true });
+                cv.text(sel ? 'HUD is off' : 'Tap to turn the HUD off', x + 12, ty + 30, 14, sel ? C.accHi : C.dim, { literal: true });
                 return;
             }
             cv.target(x, y, cw, ih + 20, () => this.chooseLayout(this.lookKey(), v), 'look:' + v, 16);
@@ -344,7 +349,7 @@ class Page {
             const x = CX + (two && i >= per ? sw + 8 : 0), y = 130 + (i % per) * (rh + 6);
             const sel = sl.id === this.slot, sn = this.hud.slotSensor(lay, sl.id, slots);
             glass(cv, x, y, sw, rh, sel);
-            cv.circle(x + 26, y + rh / 2, 14, sel ? C.blue : A(C.blue, 0.75));
+            cv.circle(x + 26, y + rh / 2, 14, sel ? C.acc : A(C.acc, 0.75));
             cv.text(String(i + 1), x + 26, y + rh / 2 + 6, 15, '#ffffff', { align: 'center', font: 'bold', literal: true });
             if (two) {
                 cv.text(sn ? sn.head : '--', x + 50, y + rh / 2 - 1, 17, '#ffffff', { font: 'bold', literal: true });
@@ -369,7 +374,7 @@ class Page {
         const list = sensors.LIST.filter((x) => x.cat === this.cat), lh = Math.min(48, Math.floor((ph - 100) / list.length));
         list.forEach((sn, i) => {
             const y = py + 94 + i * lh, sel = cur && cur.id === sn.id;
-            if (sel) cv.roundRect(px + 10, y, pw - 20, lh - 4, 10, A(C.blue, 0.35));
+            if (sel) cv.roundRect(px + 10, y, pw - 20, lh - 4, 10, A(C.acc, 0.35));
             else if (i) cv.fillRect(px + 20, y - 2, pw - 40, 1, C.line);
             cv.text(sn.name, px + 24, y + lh / 2 + 4, 18, sel ? '#ffffff' : C.text, { font: sel ? 'bold' : 'label', literal: true });
             cv.text(this.sensorText(sn), px + pw - 24, y + lh / 2 + 4, 17, sel ? '#ffffff' : C.dim, { align: 'right', literal: true });
@@ -394,7 +399,7 @@ class Page {
             cv.noclip();
         } else cv.text(shown === 'off' ? "BMW's own HUD" : 'no picture', bx + bw / 2, by + bh / 2 + 7, 18, C.dim, { align: 'center', literal: true });
         const v = visible.HUD_WINDOW;
-        dashed(cv, bx + v.x * k, by + v.y * k, v.w * k, v.h * k, A(C.blueHi, 0.9));
+        dashed(cv, bx + v.x * k, by + v.y * k, v.w * k, v.h * k, A(C.accHi, 0.9));
         cv.strokeRoundRect(bx, by, bw, bh, 10, 1, '#ffffff14');
         // the pad
         const rx = bx + bw + 60, pad = 84, gap = 10, mx = rx + pad + gap, my = by + 40;
@@ -423,7 +428,7 @@ class Page {
         // live state from waze.js: the map showing, waiting, the Waze app busy, Waze on Cluster missing
         const info = this.hud.waze ? this.hud.waze.info() : { text: 'Not available in this app', up: false, ok: false };
         let text = info.text;
-        if (this.get('mapInTheme') && !this.hud.mapLayout && this.hud.activeName !== 'off') text = 'This theme has no map window (Lame, Bumerang, Curved, Apex, GT3, Sport, M do)';
+        if (this.get('mapInTheme') && !this.hud.mapLayout && this.hud.activeName !== 'off') text = 'This theme has no map window (Artifact, Lame, Bumerang, Curved, Apex, GT3, Sport, M do)';
         glass(cv, CX, y, w, 46, false);
         cv.circle(CX + 26, y + 23, 7, info.up ? C.live : info.ok ? C.dim : '#e0a340');
         cv.text(text, CX + 46, y + 30, 18, info.up ? C.live : C.text, { literal: true });
@@ -432,7 +437,7 @@ class Page {
             'On: while the phone\'s map shows, the theme opens a window in the middle and the map shows through it.',
             'Needs robertnisipeanu\'s Maps on cluster, and the car\'s Instrument cluster > Central display area on',
             'Map view. BMW\'s own map-view marks show in the window too. When the map goes away the theme fills back in.',
-            'Themes with a map window: Lame, Bumerang, Curved, Apex, GT3, Sport, M, M view, Vector.',
+            'Themes with a map window: Artifact, Lame, Bumerang, Curved, Apex, GT3, Sport, M, M view, Vector.',
         ]);
     }
 
@@ -457,7 +462,7 @@ class Page {
         // right: what shows, the lettering, none
         const rx = CX + lw + 30, rw = CR - rx, shown = badges.text(model, this.get('badgeBMW') === true);
         label(cv, rx, 70, 'On the cluster');
-        cv.card(rx, 82, rw, 110, 16, [[0, '#000000'], [1, '#05070a']]);
+        cv.card(rx, 82, rw, 110, 16, [[0, '#000000'], [1, '#050505']]);
         cv.strokeRoundRect(rx, 82, rw, 110, 16, 1, C.line);
         cv.text(shown || 'No badge', rx + rw / 2, 148, shown ? 34 : 22, shown ? '#ffffff' : C.dim, { align: 'center', font: 'bold', literal: true });
         let y = 204;
@@ -482,7 +487,7 @@ class Page {
         const d = this.hud.car && this.hud.car.data(), moving = d && !d.demo && d.speed > 3;
         this.rowBox(cv, CX, y, w, 'Test the shift lights', 56);
         const bt = testing ? 'Running' : moving ? 'Stop the car first' : 'Run test', bw = cv.textWidth(bt, 16, { font: 'bold', literal: true }) + 40;
-        cv.roundRect(CX + w - bw - 14, y + 10, bw, 36, 18, testing || moving ? '#ffffff12' : C.blue);
+        cv.roundRect(CX + w - bw - 14, y + 10, bw, 36, 18, testing || moving ? '#ffffff12' : C.acc);
         cv.text(bt, CX + w - 14 - bw / 2, y + 34, 16, testing || moving ? C.dim : '#ffffff', { align: 'center', font: 'bold', literal: true });
         if (!testing && !moving) {
             cv.target(CX, y, w, 56, () => {
@@ -644,7 +649,7 @@ class Page {
         h = h || 56;
         this.rowBox(cv, x, y, w, name, h);
         const on = this.get(key) === true, tx = x + w - 84, ty = y + h / 2 - 16;
-        cv.roundRect(tx, ty, 66, 32, 16, on ? C.blue : '#ffffff1f');
+        cv.roundRect(tx, ty, 66, 32, 16, on ? C.acc : '#ffffff1f');
         cv.circle(on ? tx + 50 : tx + 16, ty + 16, 12, on ? '#ffffff' : '#c9d1dc');
         cv.target(x, y, w, h, () => this.set(key, !on), 'set:' + key, 14);
         return y + h + (h < 56 ? 6 : 8);
@@ -653,7 +658,7 @@ class Page {
         h = h || 56;
         const base = this.rowBox(cv, x, y, w, name, h);
         const v = this.get(key), text = fmt ? fmt(v) : this.valueText(key);
-        cv.text(text, x + w - 40, base, 19, C.blueHi, { align: 'right', font: 'bold', literal: true });
+        cv.text(text, x + w - 40, base, 19, C.accHi, { align: 'right', font: 'bold', literal: true });
         chevron(cv, x + w - 24, y + h / 2, C.dim);
         cv.target(x, y, w, h, () => { this.picker = { key, title: name, fmt }; this.kick(); }, 'set:' + key, 14);
         return y + h + (h < 56 ? 6 : 8);
@@ -664,7 +669,7 @@ class Page {
         const s = this.item(key), steps = s.steps || [], i = steps.indexOf(this.get(key));
         const bx = x + w - 66, ax = bx - 236, by = y + (h - 38) / 2;
         stepBtn(cv, ax, by, '-', i > 0, () => this.set(key, steps[i - 1]), 'dn:' + key);
-        cv.text(fmt ? fmt(this.get(key)) : this.valueText(key), ax + 140, base, 19, C.blueHi, { align: 'center', font: 'bold', literal: true });
+        cv.text(fmt ? fmt(this.get(key)) : this.valueText(key), ax + 140, base, 19, C.accHi, { align: 'center', font: 'bold', literal: true });
         stepBtn(cv, bx, by, '+', i < steps.length - 1, () => this.set(key, steps[i + 1]), 'up:' + key);
         return y + h + (h < 56 ? 6 : 8);
     }
@@ -682,13 +687,13 @@ class Page {
         const p = this.picker, s = this.item(p.key), opts = s.type === 'number' ? (s.steps || []).map((v) => [v, null]) : s.options || [];
         cv.fillRect(0, 36, W, bottom + 20, '#000000b0');
         const w = 620, rh = 58, h = 76 + opts.length * rh, x = (W - w) / 2, y = Math.max(52, (bottom + 44 - h) / 2);
-        cv.card(x, y, w, h, 18, [[0, '#18233a'], [1, '#0c111b']]);
-        cv.strokeRoundRect(x, y, w, h, 18, 1, A(C.blueHi, 0.3));
+        cv.card(x, y, w, h, 18, [[0, C.card], [1, C.cardLo]]);
+        cv.strokeRoundRect(x, y, w, h, 18, 1, A(C.accHi, 0.3));
         cv.text(p.title.toUpperCase(), x + 26, y + 42, 15, C.label, { font: 'bold', spacing: 2.4, literal: true });
         const v = this.get(p.key);
         opts.forEach((o, i) => {
             const ry = y + 60 + i * rh, sel = o[0] === v;
-            if (sel) cv.roundRect(x + 12, ry, w - 24, rh - 6, 12, A(C.blue, 0.35));
+            if (sel) cv.roundRect(x + 12, ry, w - 24, rh - 6, 12, A(C.acc, 0.35));
             const text = p.fmt ? p.fmt(o[0]) : o[1] !== null ? o[1] : fmtInt(o[0]) + ' rpm';
             cv.text(text, x + 30, ry + 34, 20, sel ? '#ffffff' : C.text, { font: sel ? 'bold' : 'label', literal: true });
             if (sel) check(cv, x + w - 50, ry + 26, '#ffffff');
@@ -705,13 +710,13 @@ class Page {
         const q = this.confirm, close = () => { this.confirm = null; this.kick(); };
         cv.fillRect(0, 36, W, bottom + 20, '#000000b0');
         const w = 720, h = 96 + q.lines.length * 30 + 84, x = (W - w) / 2, y = Math.max(52, (bottom + 44 - h) / 2);
-        cv.card(x, y, w, h, 18, [[0, '#18233a'], [1, '#0c111b']]);
-        cv.strokeRoundRect(x, y, w, h, 18, 1, A(C.blueHi, 0.3));
+        cv.card(x, y, w, h, 18, [[0, C.card], [1, C.cardLo]]);
+        cv.strokeRoundRect(x, y, w, h, 18, 1, A(C.accHi, 0.3));
         cv.text(q.title, x + 32, y + 56, 28, '#ffffff', { font: 'bold', literal: true });
         q.lines.forEach((s, i) => cv.text(s, x + 32, y + 98 + i * 30, 19, C.text, { literal: true }));
         const bh = 52, by = y + h - bh - 24;
         const yw = cv.textWidth(q.yes, 18, { font: 'bold', literal: true }) + 56, yx = x + w - 32 - yw;
-        cv.roundRect(yx, by, yw, bh, bh / 2, C.blue);
+        cv.roundRect(yx, by, yw, bh, bh / 2, C.acc);
         cv.text(q.yes, yx + yw / 2, by + 33, 18, '#ffffff', { align: 'center', font: 'bold', literal: true });
         cv.target(yx, by, yw, bh, () => { this.confirm = null; q.run(); this.kick(); }, 'confirm:yes', bh / 2);
         const nw = 150, nx = yx - 16 - nw;
@@ -738,8 +743,8 @@ function label(cv, x, y, s) { cv.text(s.toUpperCase(), x, y, 14, C.label, { font
 function note(cv, x, y, lines) { lines.forEach((s, i) => cv.text(s, x, y + i * 26, 17, C.dim, { literal: true })); }
 function glass(cv, x, y, w, h, sel) {
     if (sel) {
-        cv.card(x, y, w, h, 16, [[0, A(C.blue, 0.16)], [1, A(C.blueDeep, 0.05)]]);
-        cv.strokeRoundRect(x, y, w, h, 16, 2, C.blue);
+        cv.card(x, y, w, h, 16, [[0, A(C.acc, 0.16)], [1, A(C.accDeep, 0.05)]]);
+        cv.strokeRoundRect(x, y, w, h, 16, 2, C.acc);
     } else {
         cv.card(x, y, w, h, 16, [[0, '#ffffff0b'], [1, '#ffffff04']]);
         cv.strokeRoundRect(x, y, w, h, 16, 1, C.line);
@@ -747,7 +752,7 @@ function glass(cv, x, y, w, h, sel) {
 }
 function chip(cv, x, y, text, on, run, key) {
     const w = cv.textWidth(text, 16, { font: 'bold', literal: true }) + 30, h = 36;
-    cv.roundRect(x, y, w, h, h / 2, on ? C.blue : '#ffffff12');
+    cv.roundRect(x, y, w, h, h / 2, on ? C.acc : '#ffffff12');
     cv.text(text, x + w / 2, y + 24, 16, on ? '#ffffff' : C.off, { align: 'center', font: 'bold', literal: true });
     cv.target(x, y, w, h, run, key, h / 2);
     return w;
@@ -755,7 +760,7 @@ function chip(cv, x, y, text, on, run, key) {
 /** A small chip (the HUD cards' drive modes). */
 function miniChip(cv, x, y, text, on, run, key) {
     const w = cv.textWidth(text, 13, { font: 'bold', literal: true }) + 18, h = 28;
-    cv.roundRect(x, y, w, h, h / 2, on ? C.blue : '#ffffff12');
+    cv.roundRect(x, y, w, h, h / 2, on ? C.acc : '#ffffff12');
     cv.text(text, x + w / 2, y + 19, 13, on ? '#ffffff' : C.off, { align: 'center', font: 'bold', literal: true });
     cv.target(x, y, w, h, run, key, h / 2);
     return w;
@@ -784,7 +789,7 @@ function padBtn(cv, x, y, s, what, run, key) {
     else if (what === 'down') cv.quad([[cx, cy + a], [cx - a, cy - a * 0.7], [cx, cy - a * 0.7], [cx + a, cy - a * 0.7]], c);
     else if (what === 'left') cv.quad([[cx - a, cy], [cx + a * 0.7, cy - a], [cx + a * 0.7, cy], [cx + a * 0.7, cy + a]], c);
     else if (what === 'right') cv.quad([[cx + a, cy], [cx - a * 0.7, cy + a], [cx - a * 0.7, cy], [cx - a * 0.7, cy - a]], c);
-    else cv.text('Centre', cx, cy + 6, 17, C.blueHi, { align: 'center', font: 'bold', literal: true });
+    else cv.text('Centre', cx, cy + 6, 17, C.accHi, { align: 'center', font: 'bold', literal: true });
     cv.target(x, y, s, s, run, key, 16);
 }
 function chevron(cv, x, y, c) { cv.line(x - 4, y - 7, x + 3, y, 2.5, c); cv.line(x + 3, y, x - 4, y + 7, 2.5, c); }

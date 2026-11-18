@@ -100,6 +100,20 @@ const THEMES = {
             eco: { acc: [40, 220, 190], acc2: [6, 80, 74] },
         },
     },
+    // Artifact (layout artifact.json, after the user's own mockup): white figures on black, blue glass; the frames,
+    // panels and car take their colours from the layout (shaders.js xdash). Extra roles: kl (the speed numbers),
+    // kr (the rev numbers from 6 up), kmode (the drive mode).
+    artifact: {
+        name: 'Artifact',
+        fg: [242, 245, 250, 255], dim: [154, 166, 184, 255], track: [58, 65, 76, 255], arc: [46, 139, 255, 255],
+        glow: 0, stripe: false,
+        bar: { low: [46, 139, 255], mid: [46, 139, 255], high: [255, 42, 58], midAt: 'shift' },
+        rev: { from: [255, 42, 58], to: [255, 42, 58] },
+        bg: [0, 0, 0, 255], panel: [0, 0, 0, 255], line: [200, 206, 216, 255], head: [226, 228, 232, 255],
+        ink: [12, 12, 14, 255], accent: [63, 180, 255, 255], well: [0, 0, 0, 255], faint: [96, 104, 118, 255],
+        hot: [255, 42, 58, 255],
+        kl: [242, 245, 250, 255], kr: [243, 214, 220, 255], kmode: [242, 245, 250, 255], cyan: [63, 180, 255, 255],
+    },
     // Lame and Bumerang (layouts lame.json, bumerang.json): AAR's blue and red blade dashes. White figures on black;
     // the blades, panel, bars and stripes take their colours from the layout (shaders.js bdash). Extra roles: kl / kr
     // (the left and right scale numbers and captions), kmode (the drive mode under the gear).
