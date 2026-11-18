@@ -25,7 +25,7 @@
 1. În Store mergi la **Settings → Add source** și scrie `alexarghir98/AAR`.
 2. Instalează **AAR Cluster Themes**. Store-ul construiește aplicația direct pe mașină. SDK-ul BMW îl ia de pe unitatea ta, nu e în repository.
 3. Deschide **AAR Cluster Themes** din meniul de aplicații:
-   - **Curved** e deja ales pentru Comfort, Sport și Eco Pro.
+   - **Curved** e deja ales pentru Comfort și Eco Pro, iar **Apex** (tema sport cu roțile) pentru Sport.
    - Unitățile sunt deja km/h, °C și bar.
    - Pune **Redline** la turația maximă a motorului tău.
    - Ceasul e deja pe 24 de ore, cu fusul orar Eastern Europe (România, cu ora de vară inclusă).

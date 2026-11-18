@@ -1072,6 +1072,184 @@ void main() {
 }
 `;
 
+const ADASH = `// The Apex theme in one cluster-render "effect" layer (GLSL ES 1.00), AAR's own sport dash: speed and revs as two
+// upright light columns at the far left and right (the right one mirrored), each a thin rounded outline lit from the
+// bottom in LED steps up to a white marker, with marks on its inner side and red from the redline on the revs; a car
+// seen from above in the middle, line-drawn, its wheels in the drive mode's accent (amber while a tyre is low), with a
+// short lead from each wheel to its readout (text widgets); four level bars (boost, oil, coolant, fuel) and two thin
+// dividers. The accent follows the drive mode (u_acc / u_acc2, from hud.js). Pure black elsewhere (the car brightens
+// dark tints). v_uv (0,0) is the top-left. The map window is cut see-through (u_hole) as in sdash.
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+varying vec2 v_uv;
+uniform vec2 u_size;
+uniform vec4 u_col;       // the left column: left edge x, width, top y, bottom y (the right one mirrored)
+uniform vec4 u_val;       // speed 0..1 along its scale, rpm 0..1, boost 0..1, oil 0..1
+uniform vec4 u_val2;      // coolant 0..1, fuel 0..1
+uniform vec2 u_red;       // red from / amber from on the revs, 0..1
+uniform vec2 u_ticks;     // marks: speed, rpm (intervals between labels)
+uniform vec3 u_acc;       // the drive mode's accent
+uniform vec3 u_acc2;      // its deep end
+uniform vec4 u_bar0;      // boost bar: x0, y, width, on
+uniform vec4 u_bar1;      // oil bar
+uniform vec4 u_bar2;      // coolant bar
+uniform vec4 u_bar3;      // fuel bar
+uniform vec4 u_car;       // the car: centre x, y, px per unit, on
+uniform vec4 u_tyre;      // tyre pressures bar FL FR RL RR (0 = unknown)
+uniform vec4 u_div;       // dividers: left x, right x, top y, bottom y
+uniform vec4 u_hole;      // map window x, y, w, h, already inset (w 0 = none)
+uniform float u_holeR;
+
+const vec3 WHITE = vec3(0.95, 0.96, 0.99);
+const vec3 HOT = vec3(1.0, 0.17, 0.15);
+const vec3 AMBER = vec3(1.0, 0.7, 0.16);
+
+float cov(float d) { return clamp(0.5 - d, 0.0, 1.0); }
+vec4 over(vec4 top, vec4 under) {
+    float a = top.a + under.a * (1.0 - top.a);
+    if (a <= 0.0) return vec4(0.0);
+    return vec4((top.rgb * top.a + under.rgb * under.a * (1.0 - top.a)) / a, a);
+}
+float rbox(vec2 p, vec2 hs, float r) {
+    vec2 q = abs(p) - (hs - vec2(r));
+    return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+}
+
+// one column in the left frame (q mirrored for the right one); rev 1: the rev counter
+vec4 column(vec2 q, float val, float ticks, float rev, vec4 c) {
+    float x0 = u_col.x, w = u_col.y, yT = u_col.z, yB = u_col.w;
+    if (q.x > x0 + w + 60.0 || q.y < yT - 40.0 || q.y > yB + 40.0) return c;
+    vec2 ctr = vec2(x0 + w * 0.5, (yT + yB) * 0.5);
+    float sd = rbox(q - ctr, vec2(w * 0.5, (yB - yT) * 0.5), 12.0);
+    float span = yB - yT - 12.0;
+    float t = (yB - 6.0 - q.y) / span;                 // 0 at the bottom, 1 at the top
+    bool hot = rev > 0.5 && val >= u_red.x;
+    vec3 col = hot ? HOT : u_acc;
+
+    // the outline: white, red from the redline on the revs, amber dashes before it
+    vec3 lc = WHITE; float la = 0.45, lw = 0.9;
+    if (rev > 0.5 && t >= u_red.x) { lc = HOT; la = 1.0; lw = 1.6; }
+    else if (rev > 0.5 && t >= u_red.y && t < u_red.x && mod(q.y, 12.0) < 6.0) { lc = AMBER; la = 0.95; lw = 1.4; }
+    c = over(vec4(lc, la * cov(abs(sd) - lw)), c);
+
+    if (val > 0.002 && t >= 0.0 && t <= val) {
+        // the fill, 5 px inside the outline, in LED steps of 14 px, deep accent at the bottom to bright at the marker
+        float f = t / val;
+        float seg = mod(yB - 6.0 - q.y, 14.0);
+        float lit = clamp(seg, 0.0, 1.0) * (1.0 - clamp(seg - 10.0, 0.0, 1.0));
+        vec3 bc = mix(u_acc2, col, smoothstep(0.0, 0.85, f));
+        bc = mix(bc, WHITE, smoothstep(0.85, 1.0, f) * 0.5);
+        c = over(vec4(bc, cov(sd + 5.0) * lit * mix(0.45, 1.0, f)), c);
+        // a glow round the lit part, outside the column
+        if (sd > 0.0) c = over(vec4(col, 0.32 * mix(0.3, 1.0, f) * exp(-sd / 8.0)), c);
+    }
+
+    // the marks, on the inner side: one at every label, a short one between
+    if (t > -0.004 && t < 1.004) {
+        float tk = t * ticks;
+        float dk = abs(tk - floor(tk + 0.5)) / ticks * span;
+        float dm = abs(tk * 2.0 - floor(tk * 2.0 + 0.5)) / (2.0 * ticks) * span;
+        float xs = q.x - (x0 + w + 8.0);
+        float maj = cov(dk - 1.1) * cov(abs(xs - 7.0) - 7.0);
+        float mnr = cov(dm - 0.8) * cov(abs(xs - 3.5) - 3.5);
+        bool red = rev > 0.5 && t >= u_red.x - 0.002;
+        c = over(vec4(red ? HOT : WHITE, max(maj * 0.85, mnr * 0.4)), c);
+    }
+
+    // the marker: a white bar across the column, a little wider than it, with the accent glowing round it
+    if (val > 0.002) {
+        float yv = yB - 6.0 - val * span;
+        float dy = abs(q.y - yv);
+        float ax = abs(q.x - ctr.x) - (w * 0.5 + 7.0);
+        c = over(vec4(col, 0.5 * exp(-dy / 6.0) * cov(ax - 8.0)), c);
+        c = over(vec4(1.0, 1.0, 1.0, cov(dy - 1.8) * cov(ax)), c);
+    }
+    return c;
+}
+
+// a thin level bar: a hairline track and a lit part; zones 0 boost (red past 0.9), 1 oil / coolant (cold, hot), 2 fuel (red reserve)
+vec4 hbar(vec2 p, vec4 b, float v, float zones, vec4 c) {
+    if (b.w < 0.5) return c;
+    float x = p.x - b.x, dy = abs(p.y - b.y);
+    if (x < -6.0 || x > b.z + 6.0 || dy > 8.0) return c;
+    c = over(vec4(WHITE, 0.3 * cov(-x) * cov(x - b.z) * cov(dy - 0.7)), c);
+    vec3 bc = u_acc;
+    if (zones < 0.5 && v > 0.9) bc = HOT;
+    if (zones > 0.5 && zones < 1.5) bc = v < 0.25 ? u_acc : (v > 0.85 ? HOT : WHITE);
+    if (zones > 1.5) bc = v < 0.15 ? HOT : WHITE;
+    c = over(vec4(bc, step(0.001, v) * cov(-x) * cov(x - b.z * v) * cov(dy - 2.4)), c);
+    c = over(vec4(WHITE, 0.6 * cov(dy - 6.0) * max(cov(abs(x) - 0.9), cov(abs(x - b.z) - 0.9))), c);
+    return c;
+}
+
+// the car from above, line-drawn; u in car units (y down = towards the rear), s px per unit
+vec4 car(vec2 p, vec4 c) {
+    float s = u_car.z;
+    vec2 u = (p - u_car.xy) / s;
+    if (abs(u.x) > 2.2 || abs(u.y) > 1.4) return c;
+    // a soft accent pool under it
+    vec2 g = u / vec2(0.9, 1.3);
+    c = over(vec4(u_acc, 0.14 * exp(-dot(g, g) * 2.5)), c);
+    // the leads from each wheel towards its readout
+    float wy = abs(u.y) - 0.62, lx = abs(u.x);
+    c = over(vec4(WHITE, 0.32 * cov(abs(wy) * s - 0.7) * step(0.6, lx) * step(lx, 0.6 + 70.0 / s)), c);
+    // the wheels: accent, amber while that tyre is low (under 1.9 bar), as BMW's own tyre warning
+    vec2 wc = vec2(u.x < 0.0 ? -0.5 : 0.5, u.y < 0.0 ? -0.62 : 0.62);
+    float wd = rbox(u - wc, vec2(0.075, 0.17), 0.04) * s;
+    float pr = u.y < 0.0 ? (u.x < 0.0 ? u_tyre.x : u_tyre.y) : (u.x < 0.0 ? u_tyre.z : u_tyre.w);
+    vec3 wcol = (pr > 0.5 && pr < 1.9) ? AMBER : u_acc;
+    c = over(vec4(wcol, 0.95 * cov(wd)), c);
+    // the body, the glasshouse and the roof
+    float body = rbox(u, vec2(0.46, 1.0), 0.3) * s;
+    c = over(vec4(WHITE, 0.9 * cov(abs(body) - 1.1)), c);
+    float glass = rbox(u - vec2(0.0, 0.08), vec2(0.36, 0.5), 0.2) * s;
+    c = over(vec4(WHITE, 0.55 * cov(abs(glass) - 0.8)), c);
+    float roof = rbox(u - vec2(0.0, 0.12), vec2(0.3, 0.26), 0.12) * s;
+    c = over(vec4(WHITE, 0.4 * cov(abs(roof) - 0.7)), c);
+    // the mirrors
+    float mir = rbox(vec2(abs(u.x) - 0.52, u.y + 0.33), vec2(0.07, 0.035), 0.02) * s;
+    c = over(vec4(WHITE, 0.8 * cov(mir)), c);
+    // lights: accent at the front, red at the back
+    float fl = rbox(vec2(abs(u.x) - 0.25, u.y + 0.93), vec2(0.12, 0.018), 0.015) * s;
+    c = over(vec4(u_acc, cov(fl)), c);
+    float tl = rbox(vec2(abs(u.x) - 0.27, u.y - 0.95), vec2(0.12, 0.016), 0.015) * s;
+    c = over(vec4(HOT, 0.95 * cov(tl)), c);
+    return c;
+}
+
+void main() {
+    vec2 p = v_uv * u_size;
+    vec2 pm = vec2(u_size.x - p.x, p.y);
+    vec4 c = vec4(0.0, 0.0, 0.0, 1.0);
+    bool hole = u_hole.z > 0.0;
+
+    // the dividers: thin uprights that fade at their ends
+    if (u_div.w > 0.0 && p.y > u_div.z && p.y < u_div.w) {
+        float fy = smoothstep(u_div.z, u_div.z + 60.0, p.y) * (1.0 - smoothstep(u_div.w - 60.0, u_div.w, p.y));
+        float dl = min(abs(p.x - u_div.x), abs(p.x - u_div.y));
+        c = over(vec4(WHITE, 0.26 * fy * cov(dl - 0.6)), c);
+    }
+    if (!hole && u_car.w > 0.5) c = car(p, c);
+    c = column(p, u_val.x, u_ticks.x, 0.0, c);
+    c = column(pm, u_val.y, u_ticks.y, 1.0, c);
+    c = hbar(p, u_bar0, u_val.z, 0.0, c);
+    c = hbar(p, u_bar1, u_val.w, 1.0, c);
+    c = hbar(p, u_bar2, u_val2.x, 1.0, c);
+    c = hbar(p, u_bar3, u_val2.y, 2.0, c);
+
+    if (hole) {
+        vec2 hs = u_hole.zw * 0.5;
+        vec2 q = abs(p - (u_hole.xy + hs)) - (hs - vec2(u_holeR));
+        float hd = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - u_holeR;
+        c.a *= clamp(hd + 0.5, 0.0, 1.0);
+    }
+    gl_FragColor = c;
+}
+`;
+
 const ATEXT = `// Atlas text for a cluster-render "effect" layer (GLSL ES 1.00): u_cells equal cells across the layer, each
 // showing one glyph of the R8 glyph atlas bound to u_font (u_grid.x columns by u_grid.y rows of cells), picked
 // by the codes in u_text (32 codes, 4 to a vec4; below 0 = empty). A new value is one uniform message, no
@@ -1900,4 +2078,4 @@ void main() {
 }
 `;
 
-module.exports = { shiftbar: SHIFTBAR, arc: ARC, revbar: REVBAR, lights: LIGHTS, fill: FILL, box: BOX, grid: GRID, segbar: SEGBAR, mdash: MDASH, mtach: MTACH, sdash: SDASH, boxes: BOXES, atext: ATEXT, meter: METER, gmeter: GMETER, revarc: REVARC, tiles: TILES, ribbon: RIBBON, deco: DECO, mview: MVIEW, vdash: VDASH, cdash: CDASH };
+module.exports = { shiftbar: SHIFTBAR, arc: ARC, revbar: REVBAR, lights: LIGHTS, fill: FILL, box: BOX, grid: GRID, segbar: SEGBAR, mdash: MDASH, mtach: MTACH, sdash: SDASH, boxes: BOXES, atext: ATEXT, meter: METER, gmeter: GMETER, revarc: REVARC, tiles: TILES, ribbon: RIBBON, deco: DECO, mview: MVIEW, vdash: VDASH, cdash: CDASH, adash: ADASH };

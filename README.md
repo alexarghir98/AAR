@@ -2,18 +2,20 @@
 
 <img src="apps/aar_cluster_themes/icon.png" width="72" align="left" alt="AAR Cluster Themes icon">
 
-Redraws the whole instrument cluster of a BMW with iDrive 7 (MGU) in a theme of your choice, installed through the community MGU Store. The new **Curved** theme looks like BMW's newer clusters (iDrive 8 / 8.5 Curved Display), and its colours follow the drive mode: blue in Comfort, orange-red in Sport, red in Sport Plus, teal in Eco Pro. All of bimmer-lab's themes are here too: GT3, M, M view, Vector, Sport, Minimal, Track, Drag, Rally, Retro 80s, Cruise, Dyno and Ribbon. [Read more](apps/aar_cluster_themes/README.md)
+Redraws the whole instrument cluster of a BMW with iDrive 7 (MGU) in a theme of your choice, installed through the community MGU Store. AAR's own themes: **Curved**, after BMW's newer clusters (iDrive 8 / 8.5 Curved Display), and **Apex**, a sport dash with light columns for speed and revs and a car seen from above with every tyre's pressure and temperature. Their colours follow the drive mode: blue in Comfort, orange-red in Sport, red in Sport Plus, teal in Eco Pro. All of bimmer-lab's themes are here too: GT3, M, M view, Vector, Sport, Minimal, Track, Drag, Rally, Retro 80s, Cruise, Dyno and Ribbon. [Read more](apps/aar_cluster_themes/README.md)
 
 AAR Cluster Themes is a fork of [bimmer-lab/apps](https://github.com/bimmer-lab/apps) (Cluster Themes 0.19.0, MIT) with its own app id, `aar_cluster_themes`, so it installs next to bimmer-lab's Cluster Themes without a conflict.
 
 <p align="center"><img src="docs/images/cluster-curved.png" width="900" alt="Curved theme"></p>
 <p align="center"><img src="docs/images/cluster-curved-sport.png" width="900" alt="Curved theme in Sport"></p>
+<p align="center"><img src="docs/images/cluster-apex.png" width="900" alt="Apex theme"></p>
+<p align="center"><img src="docs/images/cluster-apex-sport.png" width="900" alt="Apex theme in Sport"></p>
 
 ## Install
 
 1. Install **cluster-render** first, from the `robertnisipeanu/idrive-apps` Store source. If you use Waze on cluster, you have it already.
 2. In the MGU Store, go to **Settings, Add source** and enter this repository (`alexarghir98/AAR`). Install **AAR Cluster Themes**.
-3. Open **AAR Cluster Themes** from the apps menu on the center screen. Curved is already picked for every drive mode. Set **Redline** to your engine's. The defaults are for Romania (km/h, 24-hour clock, Eastern Europe time zone); change **Time zone (clock)** elsewhere, as the head unit's clock runs on UTC.
+3. Open **AAR Cluster Themes** from the apps menu on the center screen. Curved is already picked for Comfort and Eco Pro, Apex for Sport. Set **Redline** to your engine's. The defaults are for Romania (km/h, 24-hour clock, Eastern Europe time zone); change **Time zone (clock)** elsewhere, as the head unit's clock runs on UTC.
 4. Use one cluster app at a time: if bimmer-lab's Cluster Themes is installed too, set it to **Off (BMW's own cluster)**.
 
 The Store builds the app on the car from this repository. No BMW code is in it: the Store makes the oap-sdk from an app already on your head unit. A Romanian guide is in [docs/CURVED-INSTALL-RO.md](docs/CURVED-INSTALL-RO.md).

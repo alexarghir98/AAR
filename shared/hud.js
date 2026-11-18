@@ -105,6 +105,13 @@
  *             (a road while no map shows, its dashes running with the speed). The accent follows the drive mode: the
  *             theme's "modes" { comfort, sport, sportplus, eco: { acc, acc2 } } (rgb 0-255), comfort before the car has
  *             said. The map window as fill ("hole", "holeWhen", "holeInset", "holeRadius"); "mapLive" works with it.
+ *   adash     effect layer; the whole Apex theme (shaders.js adash, layout made by tools/gen_apex.py), AAR's own sport dash:
+ *             "col" [x, w, yTop, yBottom] (the left light column, target px; the right one is its mirror), "ticks" [speed, rpm],
+ *             "rpmMax" (8000), "bars" [boost, oil, coolant, fuel] each [x0, y, w] (thin level bars: boost 0..2 bar, oil
+ *             50..150 C, coolant 50..130 C, fuel 0..1), "car" [cx, cy, px per unit] (a car seen from above with its wheels in
+ *             the accent, amber while a tyre is under 1.9 bar; the tyre readouts are text widgets), "div" [left x, right x,
+ *             yTop, yBottom] (thin dividers). The accent follows the drive mode as cdash (the theme's "modes"). The map
+ *             window as fill ("hole", "holeWhen", "holeInset", "holeRadius").
  *   segbar    effect layer; "max" segments, the first round(signal) lit (e.g. "setupLevel:engine"), "slant" px
  *   icon      image layer; a line icon from icons.js ("icon": gauge, shock, wheel, cog, stack, therm, oilcan, fuel)
  *   arc also takes "start" and "sweep" in degrees (clockwise from 12 o'clock; negative = anticlockwise)
@@ -2134,6 +2141,25 @@ class HudApp {
             c.uniform(ref, 'u_strip', w.strip);
             c.uniform(ref, 'u_topEnd', [w.topEnd]);
             c.uniform(ref, 'u_road', w.road ? [w.road[0], w.road[1], 0, 1] : [0, 1, 0, 0]);
+        } else if (w.type === 'adash') {
+            c.uniform(ref, 'u_size', [w.w, w.h]);
+            c.uniform(ref, 'u_col', [w.col[0] - w.x, w.col[1], w.col[2] - w.y, w.col[3] - w.y]);
+            c.uniform(ref, 'u_ticks', w.ticks);
+            const [redFrom, orange] = this._redMarks(w.rpmMax || 8000);
+            c.uniform(ref, 'u_red', [redFrom, orange]);
+            const bars = w.bars || [];
+            ['u_bar0', 'u_bar1', 'u_bar2', 'u_bar3'].forEach((u, i) => {
+                const b = bars[i];
+                c.uniform(ref, u, b ? [b[0] - w.x, b[1] - w.y, b[2], 1] : [0, 0, 0, 0]);
+            });
+            c.uniform(ref, 'u_car', w.car ? [w.car[0] - w.x, w.car[1] - w.y, w.car[2], 1] : [0, 0, 1, 0]);
+            c.uniform(ref, 'u_div', w.div ? [w.div[0] - w.x, w.div[1] - w.x, w.div[2] - w.y, w.div[3] - w.y] : [0, 0, 0, 0]);
+            c.uniform(ref, 'u_hole', this._hole(w));
+            c.uniform(ref, 'u_holeR', [this._holeRadius(w)]);
+            c.uniform(ref, 'u_val', [0, 0, 0, 0]);
+            c.uniform(ref, 'u_val2', [0, 0, 0, 0]);
+            c.uniform(ref, 'u_tyre', [0, 0, 0, 0]);
+            x.mode = null;      // the accent goes up with the first update
         } else if (w.type === 'cdash') {
             c.uniform(ref, 'u_size', [w.w, w.h]);
             c.uniform(ref, 'u_arc', [w.arc[0] - w.x, w.arc[1] - w.y, w.arc[2], w.arc[3] * Math.PI / 180]);
@@ -2760,6 +2786,33 @@ class HudApp {
             x.c.uniform(x.ref, 'u_rpm', [vals[1]]);
             x.c.uniform(x.ref, 'u_fuel', [vals[2]]);
             x.c.uniform(x.ref, 'u_oil', [vals[3]]);
+        } else if (w.type === 'adash') {
+            const us = this.setting('units') === 'us';
+            const sp = this._raw('speed'), rpm = this._raw('rpm'), boost = this._raw('boost');
+            const oil = this._raw('oil'), cool = this._raw('coolant'), fuel = this._raw('fuel');
+            const q = (v) => Math.round(Math.min(1, Math.max(0, v)) * 500) / 500;
+            const vals = [
+                q(isNum(sp) ? scaleFrac(us ? sp * 0.621371 : sp, SPEED_SCALE[us ? 'us' : 'metric']) : 0),
+                q(isNum(rpm) ? rpm / (w.rpmMax || 8000) : 0),
+                q(isNum(boost) ? boost / 2 : 0),
+                q(isNum(oil) ? (oil - 50) / 100 : 0),
+            ];
+            const vals2 = [q(isNum(cool) ? (cool - 50) / 80 : 0), q(isNum(fuel) ? fuel : 0), 0, 0];
+            const tyre = ['FL', 'FR', 'RL', 'RR'].map((k) => { const v = this._tyre('p', k); return isNum(v) ? Math.round(v * 20) / 20 : 0; });
+            const mode = this.driveMode === 'sport' && this.driveVariant === 'plus' ? 'sportplus' : (this.driveMode || 'comfort');
+            const key = vals.join('|') + '|' + vals2.join('|') + '|' + tyre.join('|') + '|' + mode;
+            if (!force && key === x.last) return;
+            x.last = key;
+            if (force || mode !== x.mode) {
+                x.mode = mode;
+                const modes = this.theme.modes || {};
+                const m = modes[mode] || modes.comfort || { acc: [79, 160, 255], acc2: [16, 52, 140] };
+                x.c.uniform(x.ref, 'u_acc', [m.acc[0] / 255, m.acc[1] / 255, m.acc[2] / 255]);
+                x.c.uniform(x.ref, 'u_acc2', [m.acc2[0] / 255, m.acc2[1] / 255, m.acc2[2] / 255]);
+            }
+            x.c.uniform(x.ref, 'u_val', vals);
+            x.c.uniform(x.ref, 'u_val2', vals2);
+            x.c.uniform(x.ref, 'u_tyre', tyre);
         } else if (w.type === 'cdash') {
             const us = this.setting('units') === 'us';
             const sp = this._raw('speed'), rpm = this._raw('rpm'), fuel = this._raw('fuel'), oil = this._raw('oil');

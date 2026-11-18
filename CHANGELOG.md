@@ -2,6 +2,12 @@
 
 Newest first. Dates are when the build was pushed.
 
+## Nov 18 2026: AAR Cluster Themes 1.1.0
+
+- **New theme: Apex,** AAR's own sport dash. Speed and revs as two upright light columns lit in LED steps, the speed and gear in big figures, boost, oil, coolant and fuel as thin bars that turn red past their limits, and a car seen from above with every tyre's pressure and temperature (a wheel turns amber under 1.9 bar). The colours follow the drive mode. With "Show Waze map inside the theme" on, the map takes the middle.
+- Apex is the default in Sport; Curved stays the default in Comfort and Eco Pro.
+- Not yet tested on a car.
+
 ## Nov 18 2026: AAR Cluster Themes 1.0.0
 
 - **AAR Cluster Themes 1.0.0,** a fork of bimmer-lab's Cluster Themes 0.19.0 with its own app id (`aar_cluster_themes`), so it installs next to bimmer-lab's without a conflict. HUD Widgets is not in this repo.

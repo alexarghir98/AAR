@@ -63,6 +63,19 @@ The look of BMW's newer clusters (iDrive 8 / 8.5 Curved Display, Drive layout), 
 <p align="center"><img src="../../docs/images/cluster-curved.png" width="900" alt="Curved theme"></p>
 <p align="center"><img src="../../docs/images/cluster-curved-sport.png" width="900" alt="Curved theme in Sport"></p>
 
+### Apex
+
+AAR's own sport dash.
+
+- **Left and right:** speed and revs as two upright light columns, lit from the bottom in LED steps up to a white marker, in the drive mode's colour. Speed on BMW's spacing (0 to 200 mph or 0 to 320 km/h), revs 0 to 8000 with amber and red from your redline; past it the column turns red.
+- **Inside them:** the speed in big light figures, boost and oil temperature as thin bars on the left; the gear (P, D3, S3, M3 ...) with the drive mode, coolant and fuel on the right. A bar turns red past its limit (boost over 1.8 bar, oil or coolant hot, fuel in reserve) and shows the accent colour while oil or coolant is cold.
+- **Middle:** a car seen from above with each tyre's pressure and temperature at the end of a lead from its wheel. A wheel turns amber while its tyre is under 1.9 bar. With "Show Waze map inside the theme" on, the map takes the middle and the tyre readouts step aside.
+- **Colours follow the drive mode:** blue in Comfort, orange-red in Sport, red in Sport Plus, teal in Eco Pro.
+- **Bottom:** the clock, range and outside temperature, with BMW's own gear letter.
+
+<p align="center"><img src="../../docs/images/cluster-apex.png" width="900" alt="Apex theme"></p>
+<p align="center"><img src="../../docs/images/cluster-apex-sport.png" width="900" alt="Apex theme in Sport"></p>
+
 ### M view
 
 The look of the M view in the newer M cars' Live Cockpit (M3, M4, M5), for any car. Asked for in issue #15.

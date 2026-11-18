@@ -82,6 +82,24 @@ const THEMES = {
             eco: { acc: [40, 220, 190], acc2: [6, 80, 74] },
         },
     },
+    // Apex (layout apex.json): AAR's own sport dash, white figures on black, the columns, wheels and bars in the drive
+    // mode's accent ("modes", read by hud.js for the adash shader). Extra roles: kscale (scale numbers), klabel.
+    apex: {
+        name: 'Apex',
+        fg: [244, 246, 250, 255], dim: [150, 158, 172, 255], track: [70, 76, 88, 255], arc: [79, 160, 255, 255],
+        glow: 0, stripe: false,
+        bar: { low: [79, 160, 255], mid: [79, 160, 255], high: [255, 44, 38], midAt: 'shift' },
+        rev: { from: [79, 160, 255], to: [79, 160, 255] },
+        bg: [0, 0, 0, 255], panel: [0, 0, 0, 255], line: [200, 206, 216, 255], head: [226, 228, 232, 255],
+        ink: [12, 12, 14, 255], accent: [79, 160, 255, 255], well: [0, 0, 0, 255], faint: [96, 104, 118, 255],
+        kscale: [205, 210, 220, 255], klabel: [150, 158, 172, 255],
+        modes: {
+            comfort: { acc: [64, 150, 255], acc2: [10, 40, 130] },
+            sport: { acc: [255, 70, 40], acc2: [110, 14, 8] },
+            sportplus: { acc: [255, 30, 60], acc2: [100, 6, 20] },
+            eco: { acc: [40, 220, 190], acc2: [6, 80, 74] },
+        },
+    },
     // M cluster look (layout m.json, after design/photos/ref-m8-cluster.png): black, white numbers with a chrome
     // fade, M red needles and setup bars. Extra roles: redTrack, chrome (bottom of a chrome fade), grey / grey2
     // (the dim gear number's fade), faint.

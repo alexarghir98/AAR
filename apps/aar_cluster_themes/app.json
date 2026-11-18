@@ -1,8 +1,8 @@
 {
   "id": "aar_cluster_themes",
   "title": "AAR Cluster Themes",
-  "description": "AAR Cluster Themes: redraws the instrument cluster. Curved (after BMW's newer iDrive 8 clusters, colours by drive mode), GT3 race dash, M-style, M view, Vector, Sport, Minimal, Track, Drag, Rally, Retro 80s, Cruise, Dyno or Ribbon. Based on bimmer-lab's Cluster Themes (MIT)",
-  "version": "1.0.0",
+  "description": "AAR Cluster Themes: redraws the instrument cluster. Curved (after BMW's newer iDrive 8 clusters, colours by drive mode), Apex (AAR's sport dash with tyres), GT3 race dash, M-style, M view, Vector, Sport, Minimal, Track, Drag, Rally, Retro 80s, Cruise, Dyno or Ribbon. Based on bimmer-lab's Cluster Themes (MIT)",
+  "version": "1.1.0",
   "vendor": "custom",
   "loggingId": "AAR1",
   "iconGlyph": "AAR",
@@ -145,6 +145,10 @@
           "Curved"
         ],
         [
+          "apex",
+          "Apex"
+        ],
+        [
           "minimal",
           "Minimal"
         ],
@@ -227,6 +231,10 @@
           "Curved"
         ],
         [
+          "apex",
+          "Apex"
+        ],
+        [
           "minimal",
           "Minimal"
         ],
@@ -264,7 +272,7 @@
       "key": "inSport",
       "label": "In Sport",
       "type": "choice",
-      "default": "curved",
+      "default": "apex",
       "options": [
         [
           "off",
@@ -293,6 +301,10 @@
         [
           "curved",
           "Curved"
+        ],
+        [
+          "apex",
+          "Apex"
         ],
         [
           "minimal",
@@ -361,6 +373,10 @@
         [
           "curved",
           "Curved"
+        ],
+        [
+          "apex",
+          "Apex"
         ],
         [
           "minimal",
