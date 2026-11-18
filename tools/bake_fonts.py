@@ -114,6 +114,14 @@ CLUSTER_FONTS = [
     ('k_unit', 'Outfit[wght].ttf', 24, UPPER + LOWER + DIGITS + '/°%.:- ', 0, 'Regular'),
     ('k_label', 'Outfit[wght].ttf', 22, UPPER + DIGITS + ' .-+', 0, 'Medium'),
     ('k_val', 'Outfit[wght].ttf', 34, DIGITS + '.:-+° ', 0, 'Light'),
+    # Apex: the same family, heavier, for the sport dash's speed and gear
+    ('k_speed_b', 'Outfit[wght].ttf', 128, DIGITS + '-', 0, 'SemiBold'),
+    ('k_gear_b', 'Outfit[wght].ttf', 112, DIGITS + 'PRNDSM-', 0, 'SemiBold'),
+    ('k_val_b', 'Outfit[wght].ttf', 34, DIGITS + '.:-+° ', 0, 'Medium'),
+    # Lame and Bumerang: Romanian captions (VITEZĂ, TREAPTĂ, RĂCIRE), the scale numbers, the mode
+    ('k_label_ro', 'Outfit[wght].ttf', 20, UPPER + 'ĂÂÎȘȚ' + DIGITS + ' .-+/%', 0, 'SemiBold'),
+    ('k_scale_b', 'Outfit[wght].ttf', 27, DIGITS, 0, 'Medium'),
+    ('k_mode', 'Outfit[wght].ttf', 24, UPPER + ' ', 0, 'Bold'),
 ]
 FONTS = {'aar_cluster_themes': CLUSTER_FONTS}   # HUD_FONTS: kept from upstream (HUD Widgets is not in this repo)
 PAD = 2

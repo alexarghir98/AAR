@@ -2,6 +2,13 @@
 
 Newest first. Dates are when the build was pushed.
 
+## Nov 18 2026: AAR Cluster Themes 1.2.0
+
+- **New themes: Lame and Bumerang,** AAR's own blade dashes. Speed on a blue blade at the left and revs on a red one at the right, each a solid glowing fill up to a white marker, with the numbers along the inner side. Lame's blades lean straight in; Bumerang's bend once like a boomerang, with stronger colours and glows. The speed and the gear in big figures with two-tone stripes, boost, oil, coolant and fuel readouts with bars, and a see-through dark blue panel in the middle that frames the Waze map (a road runs there while no map shows). Under the range, a simple fuel bar from empty to full, red in reserve. Romanian labels.
+- Defaults: Lame in Comfort, Bumerang in Sport, Curved in Eco Pro; "Show Waze map inside the theme" is on.
+- Each theme is one shader plus three small layers and four text sheets: 8 layers on one connection, about 3.5 MiB of pixel memory.
+- Not yet tested on a car.
+
 ## Nov 18 2026: AAR Cluster Themes 1.1.0
 
 - **New theme: Apex,** AAR's own sport dash. Speed and revs as two upright light columns lit in LED steps, the speed and gear in big figures, boost, oil, coolant and fuel as thin bars that turn red past their limits, and a car seen from above with every tyre's pressure and temperature (a wheel turns amber under 1.9 bar). The colours follow the drive mode. With "Show Waze map inside the theme" on, the map takes the middle.

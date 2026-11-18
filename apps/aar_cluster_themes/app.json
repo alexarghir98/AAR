@@ -2,7 +2,7 @@
   "id": "aar_cluster_themes",
   "title": "AAR Cluster Themes",
   "description": "AAR Cluster Themes: redraws the instrument cluster. Curved (after BMW's newer iDrive 8 clusters, colours by drive mode), Apex (AAR's sport dash with tyres), GT3 race dash, M-style, M view, Vector, Sport, Minimal, Track, Drag, Rally, Retro 80s, Cruise, Dyno or Ribbon. Based on bimmer-lab's Cluster Themes (MIT)",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "vendor": "custom",
   "loggingId": "AAR1",
   "iconGlyph": "AAR",
@@ -114,7 +114,7 @@
       "key": "hudLayout",
       "label": "Theme (when not by drive mode)",
       "type": "choice",
-      "default": "curved",
+      "default": "bumerang",
       "options": [
         [
           "off",
@@ -147,6 +147,14 @@
         [
           "apex",
           "Apex"
+        ],
+        [
+          "lame",
+          "Lame"
+        ],
+        [
+          "bumerang",
+          "Bumerang"
         ],
         [
           "minimal",
@@ -200,7 +208,7 @@
       "key": "inComfort",
       "label": "In Comfort",
       "type": "choice",
-      "default": "curved",
+      "default": "lame",
       "options": [
         [
           "off",
@@ -233,6 +241,14 @@
         [
           "apex",
           "Apex"
+        ],
+        [
+          "lame",
+          "Lame"
+        ],
+        [
+          "bumerang",
+          "Bumerang"
         ],
         [
           "minimal",
@@ -272,7 +288,7 @@
       "key": "inSport",
       "label": "In Sport",
       "type": "choice",
-      "default": "apex",
+      "default": "bumerang",
       "options": [
         [
           "off",
@@ -305,6 +321,14 @@
         [
           "apex",
           "Apex"
+        ],
+        [
+          "lame",
+          "Lame"
+        ],
+        [
+          "bumerang",
+          "Bumerang"
         ],
         [
           "minimal",
@@ -379,6 +403,14 @@
           "Apex"
         ],
         [
+          "lame",
+          "Lame"
+        ],
+        [
+          "bumerang",
+          "Bumerang"
+        ],
+        [
           "minimal",
           "Minimal"
         ],
@@ -416,7 +448,7 @@
       "key": "mapInTheme",
       "label": "Show Waze map inside the theme",
       "type": "bool",
-      "default": false
+      "default": true
     },
     {
       "key": "units",

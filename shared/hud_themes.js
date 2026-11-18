@@ -100,6 +100,31 @@ const THEMES = {
             eco: { acc: [40, 220, 190], acc2: [6, 80, 74] },
         },
     },
+    // Lame and Bumerang (layouts lame.json, bumerang.json): AAR's blue and red blade dashes. White figures on black;
+    // the blades, panel, bars and stripes take their colours from the layout (shaders.js bdash). Extra roles: kl / kr
+    // (the left and right scale numbers and captions), kmode (the drive mode under the gear).
+    lame: {
+        name: 'Lame',
+        fg: [244, 246, 250, 255], dim: [138, 147, 166, 255], track: [70, 76, 88, 255], arc: [47, 123, 255, 255],
+        glow: 0, stripe: false,
+        bar: { low: [47, 123, 255], mid: [47, 123, 255], high: [232, 38, 47], midAt: 'shift' },
+        rev: { from: [232, 38, 47], to: [232, 38, 47] },
+        bg: [0, 0, 0, 255], panel: [0, 0, 0, 255], line: [200, 206, 216, 255], head: [226, 228, 232, 255],
+        ink: [12, 12, 14, 255], accent: [47, 123, 255, 255], well: [0, 0, 0, 255], faint: [96, 104, 118, 255],
+        hot: [255, 42, 42, 255],
+        kl: [143, 194, 255, 255], kr: [255, 140, 140, 255], kmode: [255, 90, 90, 255],
+    },
+    bumerang: {
+        name: 'Bumerang',
+        fg: [244, 246, 250, 255], dim: [138, 147, 166, 255], track: [70, 76, 88, 255], arc: [30, 107, 255, 255],
+        glow: 0, stripe: false,
+        bar: { low: [30, 107, 255], mid: [30, 107, 255], high: [255, 35, 51], midAt: 'shift' },
+        rev: { from: [255, 35, 51], to: [255, 35, 51] },
+        bg: [0, 0, 0, 255], panel: [0, 0, 0, 255], line: [200, 206, 216, 255], head: [226, 228, 232, 255],
+        ink: [12, 12, 14, 255], accent: [30, 107, 255, 255], well: [0, 0, 0, 255], faint: [96, 104, 118, 255],
+        hot: [255, 42, 42, 255],
+        kl: [154, 210, 255, 255], kr: [255, 176, 176, 255], kmode: [255, 35, 51, 255],
+    },
     // M cluster look (layout m.json, after design/photos/ref-m8-cluster.png): black, white numbers with a chrome
     // fade, M red needles and setup bars. Extra roles: redTrack, chrome (bottom of a chrome fade), grey / grey2
     // (the dim gear number's fade), faint.

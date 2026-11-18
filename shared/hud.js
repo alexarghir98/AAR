@@ -112,6 +112,16 @@
  *             the accent, amber while a tyre is under 1.9 bar; the tyre readouts are text widgets), "div" [left x, right x,
  *             yTop, yBottom] (thin dividers). The accent follows the drive mode as cdash (the theme's "modes"). The map
  *             window as fill ("hole", "holeWhen", "holeInset", "holeRadius").
+ *   bdash     effect layer; the whole Lame / Bumerang theme (shaders.js bdash, layouts made by tools/gen_blades.py), AAR's
+ *             own: "shape" [yTop, yBend, yBottom, band width] and "xo" [x at the top, the bend, the bottom] (the left blade's
+ *             outer edge, target px; in line = a straight lean, else one sharp bend; the right blade is its mirror),
+ *             "rpmMax" (8000), "left" / "right" [[deep], [accent], [light]] (rgb 0-255; speed blue, revs red), "look"
+ *             [glow, outline alpha, outline in the accent 1 / white 0, colour pool alpha] (the glow is stronger in Sport,
+ *             softer in Eco Pro), "panel" [x, y, w, h] with "panelStyle" [fill alpha, border alpha, halo, radius] and
+ *             "panelColor" rgb, "win" [x, y, w, h] (the map window: a road there while no map shows), "bars" [boost, oil,
+ *             coolant, fuel] each [x0, y, w], "stripe" [x, y, long, short] (the left two-tone stripe; the right one
+ *             mirrored), "zone" [cx, cy, rx, ry] (the left colour pool), "base" [y, x0, x1]. The map window as fill
+ *             ("hole", "holeWhen", "holeInset", "holeRadius"); "mapLive" works with it.
  *   segbar    effect layer; "max" segments, the first round(signal) lit (e.g. "setupLevel:engine"), "slant" px
  *   icon      image layer; a line icon from icons.js ("icon": gauge, shock, wheel, cog, stack, therm, oilcan, fuel)
  *   arc also takes "start" and "sweep" in degrees (clockwise from 12 o'clock; negative = anticlockwise)
@@ -130,7 +140,8 @@
  *             Up to 32 cells; only the characters the font has.
  *   meter     effect layer (shaders.js meter): a segmented bar, "signal" between "min" and "max" (raw units: km/h, C,
  *             bar, rpm), "segments" (20), "gap" px (4), "vertical": true fills upward; "colors" [3 roles] lit below
- *             "at"[0] / up to "at"[1] / past it (fractions of the bar), "trackColor" (track); "peak": ms (true = 3 s)
+ *             "at"[0] / up to "at"[1] / past it (fractions of the bar), "trackColor" (track), "low" [fraction, role]: the
+ *             whole lit part in that role while the value is under the fraction (Lame's fuel reserve); "peak": ms (true = 3 s)
  *             holds the highest segment lit in "peakColor" (fg). arc takes "peak" too: a dot on the stroke.
  *   gmeter    effect layer (shaders.js gmeter): a G-meter: a bezel, rings every 0.25 g (0.5 g past 1.2 g) out to the
  *             setting "gRange" (1.2 g; the layout's "max" only when the setting is missing), the grip envelope (the
@@ -2141,6 +2152,35 @@ class HudApp {
             c.uniform(ref, 'u_strip', w.strip);
             c.uniform(ref, 'u_topEnd', [w.topEnd]);
             c.uniform(ref, 'u_road', w.road ? [w.road[0], w.road[1], 0, 1] : [0, 1, 0, 0]);
+        } else if (w.type === 'bdash') {
+            const X = (v) => v - w.x, Y = (v) => v - w.y;
+            const rgb = (a) => [a[0] / 255, a[1] / 255, a[2] / 255];
+            c.uniform(ref, 'u_size', [w.w, w.h]);
+            c.uniform(ref, 'u_shape', [Y(w.shape[0]), Y(w.shape[1]), Y(w.shape[2]), w.shape[3]]);
+            c.uniform(ref, 'u_xo', [X(w.xo[0]), X(w.xo[1]), X(w.xo[2])]);
+            const [redFrom, orange] = this._redMarks(w.rpmMax || 8000);
+            c.uniform(ref, 'u_red', [redFrom, orange]);
+            ['u_lc0', 'u_lc1', 'u_lc2'].forEach((u, i) => c.uniform(ref, u, rgb(w.left[i])));
+            ['u_rc0', 'u_rc1', 'u_rc2'].forEach((u, i) => c.uniform(ref, u, rgb(w.right[i])));
+            c.uniform(ref, 'u_look', w.look);
+            const box = (b) => (b ? [X(b[0]), Y(b[1]), b[2], b[3]] : [0, 0, 0, 0]);
+            c.uniform(ref, 'u_panel', box(w.panel));
+            c.uniform(ref, 'u_panelSt', w.panelStyle || [0, 0, 0, 6]);
+            c.uniform(ref, 'u_panelCol', rgb(w.panelColor || [10, 42, 120]));
+            c.uniform(ref, 'u_win', box(w.win));
+            c.uniform(ref, 'u_hole', this._hole(w));
+            c.uniform(ref, 'u_holeR', [this._holeRadius(w)]);
+            const bars = w.bars || [];
+            ['u_bar0', 'u_bar1', 'u_bar2', 'u_bar3'].forEach((u, i) => {
+                const b = bars[i];
+                c.uniform(ref, u, b ? [X(b[0]), Y(b[1]), b[2], 1] : [0, 0, 0, 0]);
+            });
+            c.uniform(ref, 'u_stripe', w.stripe ? [X(w.stripe[0]), Y(w.stripe[1]), w.stripe[2], w.stripe[3]] : [0, -100, 0, 0]);
+            c.uniform(ref, 'u_zone', w.zone ? [X(w.zone[0]), Y(w.zone[1]), w.zone[2], w.zone[3]] : [0, 0, 1, 1]);
+            c.uniform(ref, 'u_base', w.base ? [Y(w.base[0]), X(w.base[1]), X(w.base[2]), 1] : [0, 0, 0, 0]);
+            c.uniform(ref, 'u_val', [0, 0, 0, 0]);
+            c.uniform(ref, 'u_val2', [0, 0, 0, 0]);
+            x.mode = null;      // the glow goes up with the first update
         } else if (w.type === 'adash') {
             c.uniform(ref, 'u_size', [w.w, w.h]);
             c.uniform(ref, 'u_col', [w.col[0] - w.x, w.col[1], w.col[2] - w.y, w.col[3] - w.y]);
@@ -2761,6 +2801,15 @@ class HudApp {
             x.last = key;
             x.c.uniform(x.ref, 'u_value', [q]);
             if (w.peak) x.c.uniform(x.ref, 'u_peak', [pk > q ? pk : -1]);
+            // "low" [fraction, role]: the whole lit part in that role while the value is under the fraction (fuel reserve)
+            if (w.low) {
+                const low = q > 0 && q < w.low[0];
+                if (force || low !== x.low) {
+                    x.low = low;
+                    const cs = low ? [w.low[1]] : (w.colors || ['fg', 'fg', 'hot']);
+                    ['u_c1', 'u_c2', 'u_c3'].forEach((u, i) => x.c.uniform(x.ref, u, rgb(color(this.theme, cs[i] || cs[cs.length - 1]))));
+                }
+            }
         } else if (w.type === 'sdash') {
             const us = this.setting('units') === 'us';
             const sp = this._raw('speed'), rpm = this._raw('rpm'), fuel = this._raw('fuel'), oil = this._raw('oil');
@@ -2786,6 +2835,33 @@ class HudApp {
             x.c.uniform(x.ref, 'u_rpm', [vals[1]]);
             x.c.uniform(x.ref, 'u_fuel', [vals[2]]);
             x.c.uniform(x.ref, 'u_oil', [vals[3]]);
+        } else if (w.type === 'bdash') {
+            const us = this.setting('units') === 'us';
+            const sp = this._raw('speed'), rpm = this._raw('rpm'), boost = this._raw('boost');
+            const oil = this._raw('oil'), cool = this._raw('coolant'), fuel = this._raw('fuel');
+            const q = (v) => Math.round(Math.min(1, Math.max(0, v)) * 500) / 500;
+            const vals = [
+                q(isNum(sp) ? scaleFrac(us ? sp * 0.621371 : sp, SPEED_SCALE[us ? 'us' : 'metric']) : 0),
+                q(isNum(rpm) ? rpm / (w.rpmMax || 8000) : 0),
+                q(isNum(boost) ? boost / 2 : 0),
+                q(isNum(oil) ? (oil - 50) / 100 : 0),
+            ];
+            // the road's dashes in the map window: one dash and gap per ROAD_DASH_M metres driven, 1/64 steps
+            const now = Date.now(), dt = x.roadT ? Math.min(1, (now - x.roadT) / 1000) : 0;
+            x.roadT = now;
+            x.roadPhase = ((x.roadPhase || 0) + (isNum(sp) ? Math.max(0, sp) / 3.6 : 0) * dt / ROAD_DASH_M) % 1;
+            const vals2 = [q(isNum(cool) ? (cool - 50) / 80 : 0), q(isNum(fuel) ? fuel : 0), Math.round(x.roadPhase * 64) / 64, 0];
+            const mode = this.driveMode === 'sport' && this.driveVariant === 'plus' ? 'sportplus' : (this.driveMode || 'comfort');
+            const key = vals.join('|') + '|' + vals2.join('|') + '|' + mode;
+            if (!force && key === x.last) return;
+            x.last = key;
+            if (force || mode !== x.mode) {
+                x.mode = mode;
+                const k = { sport: 1.2, sportplus: 1.35, eco: 0.8 }[mode] || 1;
+                x.c.uniform(x.ref, 'u_look', [w.look[0] * k, w.look[1], w.look[2], w.look[3] * Math.min(1.25, k)]);
+            }
+            x.c.uniform(x.ref, 'u_val', vals);
+            x.c.uniform(x.ref, 'u_val2', vals2);
         } else if (w.type === 'adash') {
             const us = this.setting('units') === 'us';
             const sp = this._raw('speed'), rpm = this._raw('rpm'), boost = this._raw('boost');

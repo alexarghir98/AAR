@@ -1250,6 +1250,231 @@ void main() {
 }
 `;
 
+const BDASH = `// The Lame (straight blades) and Bumerang (boomerang blades) themes in one cluster-render "effect" layer (GLSL ES
+// 1.00), AAR's own designs: speed on a blue blade at the left, revs on a red blade at the right (the right one mirrored),
+// each a band of width u_shape.w whose outer edge runs from (xT, yT) through (xM, yM) to (xB, yB): a straight lean when
+// the three are in line, one sharp bend (a boomerang) when they are not. A solid fill from the bottom up to a white
+// marker, glowing, with marks on the inner side and red from the redline; a see-through dark blue panel in the middle
+// framing the Waze map (cut see-through while it shows, u_hole), with a road in it while no map shows; four readout bars,
+// two-tone slanted stripes under the big figures, soft colour pools behind the sides and a base line. v_uv (0,0) is the
+// top-left.
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+varying vec2 v_uv;
+uniform vec2 u_size;
+uniform vec4 u_shape;     // yT, yM, yB, band width
+uniform vec3 u_xo;        // the outer edge's x at the top, the bend and the bottom (left blade)
+uniform vec4 u_val;       // speed 0..1, rpm 0..1, boost 0..1, oil 0..1
+uniform vec4 u_val2;      // coolant 0..1, fuel 0..1, road dash phase 0..1
+uniform vec2 u_red;       // red from / amber from on the revs, 0..1
+uniform vec3 u_lc0;       // left (speed) colours: deep, accent, light
+uniform vec3 u_lc1;
+uniform vec3 u_lc2;
+uniform vec3 u_rc0;       // right (revs) colours
+uniform vec3 u_rc1;
+uniform vec3 u_rc2;
+uniform vec4 u_look;      // glow strength, outline alpha, outline in the accent (1) or white (0), zone pool alpha
+uniform vec4 u_panel;     // the middle panel: x, y, w, h
+uniform vec4 u_panelSt;   // its fill alpha, border alpha, halo strength, corner radius
+uniform vec3 u_panelCol;  // its fill colour
+uniform vec4 u_win;       // the map window inside it: x, y, w, h (the road shows there while no map does)
+uniform vec4 u_hole;      // the map window cut see-through, already inset (w 0 = none)
+uniform float u_holeR;
+uniform vec4 u_bar0;      // boost bar: x0, y, width, on
+uniform vec4 u_bar1;      // oil bar
+uniform vec4 u_bar2;      // coolant bar
+uniform vec4 u_bar3;      // fuel bar
+uniform vec4 u_stripe;    // the left two-tone stripe: x, y, long width, short width (the right one mirrored)
+uniform vec4 u_zone;      // the left colour pool: centre x, y, radius x, y (the right one mirrored)
+uniform vec4 u_base;      // the base line: y, left x, right x, on
+
+const vec3 WHITE = vec3(0.95, 0.96, 0.99);
+const vec3 HOT = vec3(1.0, 0.1, 0.1);
+const vec3 AMBER = vec3(1.0, 0.7, 0.16);
+
+float cov(float d) { return clamp(0.5 - d, 0.0, 1.0); }
+vec4 over(vec4 top, vec4 under) {
+    float a = top.a + under.a * (1.0 - top.a);
+    if (a <= 0.0) return vec4(0.0);
+    return vec4((top.rgb * top.a + under.rgb * under.a * (1.0 - top.a)) / a, a);
+}
+float xo(float y) {
+    if (y >= u_shape.y) return mix(u_xo.y, u_xo.z, (y - u_shape.y) / (u_shape.z - u_shape.y));
+    return mix(u_xo.x, u_xo.y, (y - u_shape.x) / (u_shape.y - u_shape.x));
+}
+float rbox(vec2 p, vec2 hs, float r) {
+    vec2 q = abs(p) - (hs - vec2(r));
+    return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+}
+
+// one blade in the left frame (q mirrored for the right one); rev 1: the rev counter
+vec4 blade(vec2 q, float val, vec3 c0, vec3 c1, vec3 c2, float rev, vec4 c) {
+    float yT = u_shape.x, yB = u_shape.z, w = u_shape.w;
+    if (q.y < yT - 60.0 || q.y > yB + 60.0 || q.x > max(u_xo.x, u_xo.z) + w + 140.0) return c;
+    float x0 = xo(clamp(q.y, yT, yB));
+    float d = q.x - x0;                                   // px into the band from its outer edge
+    float span = yB - yT - 8.0;
+    float t = (yB - 4.0 - q.y) / span;                    // 0 at the bottom, 1 at the top
+    float yv = yB - 4.0 - val * span;
+    bool hot = rev > 0.5 && val >= u_red.x;
+    vec3 acc = hot ? HOT : c1;
+    float dx = max(-d, d - w);                            // px outside the band, across it
+    float g = u_look.x;
+    // the glow round the lit part (from the bottom up to the marker), a tight one and a wide halo; it also lights the
+    // gap between the fill and the outline
+    if (val > 0.002) {
+        float gd = length(max(vec2(dx, max(yv - q.y, q.y - yB)), 0.0));
+        c = over(vec4(acc, min(1.0, 0.5 * g) * exp(-gd / 9.0)), c);
+        c = over(vec4(acc, min(1.0, 0.22 * g) * exp(-gd / 30.0)), c);
+    }
+    float inner = min(d - 6.0, w - 6.0 - d);              // > 0 inside the inset fill area
+    bool inY = q.y > yT + 4.0 && q.y < yB - 4.0;
+    if (inY && inner > -0.5) {
+        float a = cov(-inner);
+        if (val > 0.002 && q.y >= yv) {
+            float f = clamp((yB - 4.0 - q.y) / max(yB - 4.0 - yv, 1.0), 0.0, 1.0);    // 0 at the bottom, 1 at the marker
+            vec3 col = mix(c0, c1, smoothstep(0.0, 0.5, f));
+            col = mix(col, mix(c1, c2, 0.6), smoothstep(0.5, 0.88, f));
+            col = mix(col, c2, smoothstep(0.88, 1.0, f));
+            if (rev > 0.5 && t >= u_red.x) col = HOT;
+            c = over(vec4(col, a), c);
+            // a bright edge along the inner side of the fill
+            c = over(vec4(1.0, 1.0, 1.0, 0.45 * cov(abs(d - (w - 7.5)) - 0.9)), c);
+        } else {
+            c = over(vec4(1.0, 1.0, 1.0, 0.07 * a), c);
+        }
+    }
+    // the outline: the two edges and the square ends
+    vec3 lc = mix(WHITE, c1, u_look.z);
+    float la = u_look.y, lw = 1.1;
+    if (rev > 0.5 && t >= u_red.x) { lc = HOT; la = 1.0; lw = 1.9; }
+    else if (rev > 0.5 && t >= u_red.y && t < u_red.x && mod(q.y, 13.0) < 7.0) { lc = AMBER; la = 1.0; lw = 1.9; }
+    float edge = (q.y >= yT - 1.0 && q.y <= yB + 1.0) ? min(abs(d), abs(d - w)) : 1e4;
+    float cap = (d >= -1.0 && d <= w + 1.0) ? min(abs(q.y - yT), abs(q.y - yB)) : 1e4;
+    if (rev > 0.5 && abs(q.y - yT) < 3.0) { lc = HOT; la = 1.0; lw = 1.9; }
+    c = over(vec4(lc, la * cov(min(edge, cap) - lw)), c);
+    // the marker: a white bar across the band, a little wider than it, with a glow
+    if (val > 0.002) {
+        float xv = xo(yv);
+        float ax = max(xv - 12.0 - q.x, q.x - (xv + w + 12.0));
+        float ady = abs(q.y - yv);
+        c = over(vec4(c2, min(1.0, 0.6 * g) * exp(-max(ady - 3.0, 0.0) / 7.0) * exp(-max(ax + 4.0, 0.0) / 8.0)), c);
+        c = over(vec4(1.0, 1.0, 1.0, cov(ady - 2.6) * cov(ax)), c);
+    }
+    // the marks on the inner side: one at every number, a short one between
+    if (t > -0.004 && t < 1.004) {
+        float tk = t * 16.0;
+        float k = floor(tk + 0.5);
+        float dm = abs(tk - k) / 16.0 * span;
+        float major = mod(k, 2.0) < 0.5 ? 1.0 : 0.0;
+        float L = major > 0.5 ? 14.0 : 7.0;
+        float xs = q.x - (x0 + w + 8.0);
+        bool red = rev > 0.5 && t >= u_red.x - 0.002;
+        c = over(vec4(red ? HOT : WHITE, (major > 0.5 ? 0.95 : 0.5) * cov(dm - 1.1) * cov(abs(xs - L * 0.5) - L * 0.5)), c);
+    }
+    return c;
+}
+
+// a readout bar: hairline track, the lit part in the side's accent (fuel in reserve amber), end marks
+vec4 hbar(vec2 p, vec4 b, float v, vec3 col, float fuel, vec4 c) {
+    if (b.w < 0.5) return c;
+    float x = p.x - b.x, dy = abs(p.y - b.y);
+    if (x < -20.0 || x > b.z + 20.0 || dy > 20.0) return c;
+    c = over(vec4(WHITE, 0.3 * cov(-x) * cov(x - b.z) * cov(dy - 0.7)), c);
+    vec3 bc = (fuel > 0.5 && v < 0.15) ? AMBER : col;
+    float lit = step(0.001, v) * cov(-x) * cov(x - b.z * v);
+    float ex = max(-x, x - b.z * v);
+    c = over(vec4(bc, step(0.001, v) * 0.45 * u_look.x * exp(-length(max(vec2(ex, dy - 2.5), 0.0)) / 5.0)), c);
+    c = over(vec4(bc, lit * cov(dy - 2.6)), c);
+    c = over(vec4(WHITE, 0.6 * cov(dy - 6.0) * max(cov(abs(x) - 0.8), cov(abs(x - b.z) - 0.8))), c);
+    return c;
+}
+
+// a two-tone slanted stripe: the long part in colour a, then the short part in colour b (flip: short first)
+vec4 stripe(vec2 p, float x, float y, float lw, float sw, vec3 a, vec3 b, float flip, vec4 c) {
+    float h = 12.0, k = 12.0;
+    if (p.y < y - 12.0 || p.y > y + h + 12.0) return c;
+    float u = p.x - x - k * (y + h - p.y) / h;              // x along the stripe, the slant removed
+    float x1 = flip > 0.5 ? sw : lw, x2 = x1 + 8.0, x3 = x2 + (flip > 0.5 ? lw : sw);
+    float iy = cov(-(p.y - y)) * cov(p.y - (y + h));
+    vec3 ca = flip > 0.5 ? b : a, cb = flip > 0.5 ? a : b;
+    float pa = cov(-u) * cov(u - x1) * iy, pb = cov(-(u - x2)) * cov(u - x3) * iy;
+    float lu = flip > 0.5 ? u - x2 : u, ll = flip > 0.5 ? x3 - x2 : x1;
+    float gd = length(max(vec2(max(-lu, lu - ll), max(y - p.y, p.y - y - h)), 0.0));
+    c = over(vec4(flip > 0.5 ? cb : ca, 0.4 * u_look.x * exp(-gd / 6.0)), c);
+    c = over(vec4(ca, pa), c);
+    c = over(vec4(cb, pb), c);
+    return c;
+}
+
+void main() {
+    vec2 p = v_uv * u_size;
+    // each half is drawn once, the right one in the left one's frame (mirrored): one blade, pool, stripe and bar row
+    // per pixel keeps the shader small (tokens are counted inlined)
+    bool R = p.x > u_size.x * 0.5;
+    vec2 q = R ? vec2(u_size.x - p.x, p.y) : p;
+    vec3 k0 = R ? u_rc0 : u_lc0, k1 = R ? u_rc1 : u_lc1, k2 = R ? u_rc2 : u_lc2, ko = R ? u_lc1 : u_rc1;
+    vec4 c = vec4(0.0, 0.0, 0.0, 1.0);
+    bool hole = u_hole.z > 0.0;
+
+    // the colour pool behind this side
+    vec2 zq = (q - u_zone.xy) / u_zone.zw;
+    c = over(vec4(k1, u_look.w * exp(-dot(zq, zq) * 2.4)), c);
+
+    // the middle panel: a halo, the fill, the border, a light line along its top (this side's colour to white)
+    vec2 ph = u_panel.zw * 0.5;
+    float pd = rbox(p - (u_panel.xy + ph), ph, u_panelSt.w);
+    if (u_panelSt.z > 0.0 && pd > 0.0) c = over(vec4(u_lc1, u_panelSt.z * exp(-pd / 14.0)), c);
+    if (pd < 0.5) c = over(vec4(u_panelCol, u_panelSt.x * cov(pd)), c);
+    c = over(vec4(mix(u_lc1, WHITE, 0.4), u_panelSt.y * cov(abs(pd) - 1.0)), c);
+    float tx = (q.x - u_panel.x - 40.0) / (u_panel.z * 0.5 - 40.0);
+    if (tx > 0.0 && tx < 1.0) {
+        float dyl = abs(p.y - u_panel.y);
+        vec3 tc = mix(k1, WHITE, smoothstep(0.5, 1.0, tx));
+        c = over(vec4(tc, smoothstep(0.0, 0.4, tx) * (0.5 * u_look.x * exp(-dyl / 4.0) + cov(dyl - 1.1))), c);
+    }
+    // the road inside the map window while no map shows: edge lines and dashed lanes running with the speed
+    if (!hole && p.x > u_win.x && p.x < u_win.x + u_win.z && p.y > u_win.y && p.y < u_win.y + u_win.w) {
+        float hy = u_win.y + 70.0, sc = 1.6, cxw = u_win.x + u_win.z * 0.5;
+        float dyr = p.y - hy;
+        if (dyr > 1.0) {
+            float xw = abs(p.x - cxw) * sc / dyr, lp = dyr / sc;
+            float fade = smoothstep(0.0, 120.0, dyr), hw = 0.8 + dyr * 0.008;
+            c = over(vec4(k1, 0.85 * fade * cov(abs(xw - 1.5) * lp - hw)), c);
+            c = over(vec4(WHITE, 0.55 * fade * cov(abs(xw - 0.5) * lp - hw) * step(fract(sc * 120.0 / dyr + u_val2.z), 0.45)), c);
+        }
+        vec2 gh = (p - vec2(cxw, hy)) / vec2(u_win.z * 0.45, 46.0);
+        c = over(vec4(mix(u_lc1, u_rc1, smoothstep(-90.0, 90.0, p.x - cxw)), 0.22 * u_look.x * exp(-dot(gh, gh) * 2.0)), c);
+    }
+
+    c = blade(q, R ? u_val.y : u_val.x, k0, k1, k2, R ? 1.0 : 0.0, c);
+    // this side's readout bar nearest the pixel (screen frame: they fill left to right on both sides)
+    vec4 b0 = R ? u_bar2 : u_bar0, b1 = R ? u_bar3 : u_bar1;
+    bool row0 = p.y < (b0.y + b1.y) * 0.5;
+    float bv = R ? (row0 ? u_val2.x : u_val2.y) : (row0 ? u_val.z : u_val.w);
+    c = hbar(p, row0 ? b0 : b1, bv, k1, R && !row0 ? 1.0 : 0.0, c);
+    // the two-tone stripe: long in this side's colour, short in the other's; the right one mirrored (short first)
+    float sx = R ? u_size.x - u_stripe.x - u_stripe.z - u_stripe.w - 20.0 : u_stripe.x;
+    c = stripe(p, sx, u_stripe.y, u_stripe.z, u_stripe.w, k1, ko, R ? 1.0 : 0.0, c);
+    // the base line, blue to red
+    if (u_base.w > 0.5 && p.x > u_base.y && p.x < u_base.z) {
+        float tb = (p.x - u_base.y) / (u_base.z - u_base.y);
+        float ba = smoothstep(0.0, 0.2, tb) * (1.0 - smoothstep(0.8, 1.0, tb));
+        float dyb = abs(p.y - u_base.x);
+        c = over(vec4(mix(u_lc1, u_rc1, smoothstep(0.25, 0.75, tb)), ba * (0.4 * u_look.x * exp(-dyb / 4.0) + cov(dyb - 1.0))), c);
+    }
+
+    if (hole) {
+        vec2 hs = u_hole.zw * 0.5;
+        c.a *= clamp(rbox(p - (u_hole.xy + hs), hs, u_holeR) + 0.5, 0.0, 1.0);
+    }
+    gl_FragColor = c;
+}
+`;
+
 const ATEXT = `// Atlas text for a cluster-render "effect" layer (GLSL ES 1.00): u_cells equal cells across the layer, each
 // showing one glyph of the R8 glyph atlas bound to u_font (u_grid.x columns by u_grid.y rows of cells), picked
 // by the codes in u_text (32 codes, 4 to a vec4; below 0 = empty). A new value is one uniform message, no
@@ -2078,4 +2303,4 @@ void main() {
 }
 `;
 
-module.exports = { shiftbar: SHIFTBAR, arc: ARC, revbar: REVBAR, lights: LIGHTS, fill: FILL, box: BOX, grid: GRID, segbar: SEGBAR, mdash: MDASH, mtach: MTACH, sdash: SDASH, boxes: BOXES, atext: ATEXT, meter: METER, gmeter: GMETER, revarc: REVARC, tiles: TILES, ribbon: RIBBON, deco: DECO, mview: MVIEW, vdash: VDASH, cdash: CDASH, adash: ADASH };
+module.exports = { shiftbar: SHIFTBAR, arc: ARC, revbar: REVBAR, lights: LIGHTS, fill: FILL, box: BOX, grid: GRID, segbar: SEGBAR, mdash: MDASH, mtach: MTACH, sdash: SDASH, boxes: BOXES, atext: ATEXT, meter: METER, gmeter: GMETER, revarc: REVARC, tiles: TILES, ribbon: RIBBON, deco: DECO, mview: MVIEW, vdash: VDASH, cdash: CDASH, adash: ADASH, bdash: BDASH };

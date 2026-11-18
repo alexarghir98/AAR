@@ -76,6 +76,20 @@ AAR's own sport dash.
 <p align="center"><img src="../../docs/images/cluster-apex.png" width="900" alt="Apex theme"></p>
 <p align="center"><img src="../../docs/images/cluster-apex-sport.png" width="900" alt="Apex theme in Sport"></p>
 
+### Lame and Bumerang
+
+AAR's own blade themes, blue for speed and red for revs, with the Waze map framed in the middle.
+
+- **Left and right:** speed on a blue blade, revs on a red one, each a solid fill from the bottom up to a white marker, glowing (more in Sport, less in Eco Pro). Marks and numbers run along the inner side; the number nearest the value lights up white. Speed on BMW's spacing (0 to 200 mph or 0 to 320 km/h), revs 0 to 8000, amber and then red from your redline.
+- **Lame** leans its blades straight in towards the top. **Bumerang** bends them once, like a boomerang pointing out to the screen edge, with stronger colours and glows and a bluer middle panel.
+- **Beside them:** the speed (VITEZĂ) and the gear (TREAPTĂ) in big figures with the drive mode under the gear, two-tone stripes, and boost, oil, coolant and fuel readouts with thin bars (the fuel bar turns amber in reserve).
+- **Middle:** a see-through dark blue panel. With "Show Waze map inside the theme" on and Waze on Cluster running, the map shows in it; otherwise a road runs there with the speed.
+- **Bottom:** the clock, the range with a fuel bar under it (empty at the left, full at the right, red in reserve), and the outside temperature, with BMW's own gear letter.
+- The labels are in Romanian.
+
+<p align="center"><img src="../../docs/images/cluster-lame.png" width="900" alt="Lame theme"></p>
+<p align="center"><img src="../../docs/images/cluster-bumerang.png" width="900" alt="Bumerang theme"></p>
+
 ### M view
 
 The look of the M view in the newer M cars' Live Cockpit (M3, M4, M5), for any car. Asked for in issue #15.
