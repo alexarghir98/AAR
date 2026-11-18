@@ -12,7 +12,7 @@ AAR Cluster Themes is a fork of [bimmer-lab/apps](https://github.com/bimmer-lab/
 ## Install
 
 1. Install **cluster-render** first, from the `robertnisipeanu/idrive-apps` Store source. If you use Waze on cluster, you have it already.
-2. In the MGU Store, go to **Settings, Add source** and enter this repository (`<owner>/aar-cluster-themes`). Install **AAR Cluster Themes**.
+2. In the MGU Store, go to **Settings, Add source** and enter this repository (`alexarghir98/AAR`). Install **AAR Cluster Themes**.
 3. Open **AAR Cluster Themes** from the apps menu on the center screen. Curved is already picked for every drive mode. Set **Redline** to your engine's. The defaults are for Romania (km/h, 24-hour clock, Eastern Europe time zone); change **Time zone (clock)** elsewhere, as the head unit's clock runs on UTC.
 4. Use one cluster app at a time: if bimmer-lab's Cluster Themes is installed too, set it to **Off (BMW's own cluster)**.
 

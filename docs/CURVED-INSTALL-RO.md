@@ -9,12 +9,12 @@
 
 ## 1. Pune proiectul pe GitHub
 
-1. Pe github.com fă un repository nou, gol, cu numele `aar-cluster-themes`. Fără README, fără licență. Fă-l **public**, ca Store-ul să-l poată citi.
+1. Repository-ul e `alexarghir98/AAR` pe GitHub, **public**, ca Store-ul să-l poată citi. Dacă trebuie făcut din nou: unul gol, fără README și fără licență.
 2. Din Terminal, în folderul proiectului:
 
    ```sh
    cd ~/Documents/"Proiecte Coding BMW"/"AAR Cluster Themes"
-   git remote add origin https://github.com/<userul-tau>/aar-cluster-themes.git
+   git remote add origin https://github.com/alexarghir98/AAR.git
    git push -u origin main
    ```
 
@@ -22,7 +22,7 @@
 
 ## 2. Instalează din MGU Store
 
-1. În Store mergi la **Settings → Add source** și scrie `<userul-tau>/aar-cluster-themes`.
+1. În Store mergi la **Settings → Add source** și scrie `alexarghir98/AAR`.
 2. Instalează **AAR Cluster Themes**. Store-ul construiește aplicația direct pe mașină. SDK-ul BMW îl ia de pe unitatea ta, nu e în repository.
 3. Deschide **AAR Cluster Themes** din meniul de aplicații:
    - **Curved** e deja ales pentru Comfort, Sport și Eco Pro.
