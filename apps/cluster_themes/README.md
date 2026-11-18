@@ -48,6 +48,19 @@ The look of BMW's newer Live Cockpit Sport view.
 
 <p align="center"><img src="../../docs/images/cluster-sport.png" width="900" alt="Sport theme"></p>
 
+### Curved
+
+The look of BMW's newer clusters (iDrive 8 / 8.5 Curved Display, Drive layout), for iDrive 7 cars.
+
+- **Left:** speed on a thin bowed scale (0 to 200 mph or 0 to 320 km/h, BMW's own spacing). A band inside the line lights from 0 to the needle, dim at 0 and bright at the needle, with a white needle and a soft glow. The speed in big light figures inside the scale, the fuel level as a thin bar, and the range under it.
+- **Right:** revs the same way, 0 to 8000 rpm, with amber dashes and a red line from your redline; past it the band turns red. The gear (P, D3, S3, M3 ...) inside the scale with the drive mode under it, and the oil temperature as a thin bar with its value.
+- **Colours follow the drive mode:** BMW blue in Comfort, orange-red in Sport, red in Sport Plus and teal in Eco Pro (blue until the car has said which mode it is in).
+- **Middle:** a road running to a soft glow on the horizon, its lane lines moving with the speed, over a gently curved base line. With "Show Waze map inside the theme" on, the map shows in the middle; the window opens and closes without the theme being built again.
+- **Bottom:** the clock, coolant temperature and outside temperature, with BMW's own gear letter.
+
+<p align="center"><img src="../../docs/images/cluster-curved.png" width="900" alt="Curved theme"></p>
+<p align="center"><img src="../../docs/images/cluster-curved-sport.png" width="900" alt="Curved theme in Sport"></p>
+
 ### M view
 
 The look of the M view in the newer M cars' Live Cockpit (M3, M4, M5), for any car. Asked for in issue #15.

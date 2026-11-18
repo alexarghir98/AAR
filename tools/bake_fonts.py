@@ -107,6 +107,13 @@ CLUSTER_FONTS = [
     ('b_unit', 'Outfit[wght].ttf', 26, UPPER + LOWER + '/', 0, 'Medium'),
     ('b_gear', 'Outfit[wght].ttf', 32, DIGITS + 'PRNDSM-', 0, 'SemiBold'),
     ('b_scale', 'Outfit[wght].ttf', 20, DIGITS, 0, 'Medium'),
+    # Curved (iDrive 8 look, layout curved.json): Outfit (SIL OFL), light and open like BMW's newer clusters
+    ('k_speed', 'Outfit[wght].ttf', 128, DIGITS + '-', 0, 'Light'),
+    ('k_gear', 'Outfit[wght].ttf', 112, DIGITS + 'PRNDSM-', 0, 'Regular'),
+    ('k_scale', 'Outfit[wght].ttf', 26, DIGITS, 0, 'Regular'),
+    ('k_unit', 'Outfit[wght].ttf', 24, UPPER + LOWER + DIGITS + '/°%.:- ', 0, 'Regular'),
+    ('k_label', 'Outfit[wght].ttf', 22, UPPER + DIGITS + ' .-+', 0, 'Medium'),
+    ('k_val', 'Outfit[wght].ttf', 34, DIGITS + '.:-+° ', 0, 'Light'),
 ]
 FONTS = {'idrive_hud_widgets': HUD_FONTS, 'cluster_themes': CLUSTER_FONTS}
 PAD = 2
@@ -173,9 +180,14 @@ def bake(out, name, file, size, chars, stroke=0, weight=None, subs=None, tuck=''
 
 if __name__ == '__main__':
     import sys
-    for app in sys.argv[1:] or sorted(FONTS):
+    only = None
+    args = sys.argv[1:]
+    if '--only' in args:
+        i = args.index('--only'); only = set(args[i + 1].split(',')); args = args[:i] + args[i + 2:]
+    for app in args or sorted(FONTS):
         out = os.path.join(APPS, app, 'hud', 'fonts')
         os.makedirs(out, exist_ok=True)
         print(app)
         for spec in FONTS[app]:
-            bake(out, *spec)
+            if only is None or spec[0] in only:
+                bake(out, *spec)

@@ -63,6 +63,25 @@ const THEMES = {
         ink: [12, 12, 14, 255], accent: [60, 215, 255, 255], well: [0, 0, 0, 255], faint: [96, 110, 135, 255],
         sblue: [120, 170, 245, 255], spink: [236, 140, 140, 255], sred: [235, 60, 70, 255],
     },
+    // Curved (layout curved.json): after BMW's newer clusters (iDrive 8 / 8.5 Curved Display, Drive layout). White
+    // figures on black, the scales' accent by drive mode ("modes", read by hud.js for the cdash shader): BMW blue in
+    // Comfort, orange-red in Sport, red in Sport Plus, teal in Eco Pro. Extra roles: kscale (scale numbers), klabel.
+    curved: {
+        name: 'Curved',
+        fg: [244, 246, 250, 255], dim: [150, 158, 172, 255], track: [70, 76, 88, 255], arc: [79, 160, 255, 255],
+        glow: 0, stripe: false,
+        bar: { low: [79, 160, 255], mid: [79, 160, 255], high: [255, 44, 38], midAt: 'shift' },
+        rev: { from: [79, 160, 255], to: [79, 160, 255] },
+        bg: [0, 0, 0, 255], panel: [0, 0, 0, 255], line: [200, 206, 216, 255], head: [226, 228, 232, 255],
+        ink: [12, 12, 14, 255], accent: [79, 160, 255, 255], well: [0, 0, 0, 255], faint: [96, 104, 118, 255],
+        kscale: [205, 210, 220, 255], klabel: [150, 158, 172, 255],
+        modes: {
+            comfort: { acc: [79, 160, 255], acc2: [14, 48, 140] },
+            sport: { acc: [255, 92, 36], acc2: [120, 20, 10] },
+            sportplus: { acc: [255, 38, 44], acc2: [110, 8, 16] },
+            eco: { acc: [40, 220, 190], acc2: [6, 80, 74] },
+        },
+    },
     // M cluster look (layout m.json, after design/photos/ref-m8-cluster.png): black, white numbers with a chrome
     // fade, M red needles and setup bars. Extra roles: redTrack, chrome (bottom of a chrome fade), grey / grey2
     // (the dim gear number's fade), faint.

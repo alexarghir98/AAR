@@ -97,6 +97,14 @@
  *             "ticks" [speed, rpm], "rpmMax" (speed follows SPEED_SCALE), "fuelSeg" / "oilSeg" [fullX, fullY,
  *             emptyX, emptyY], "strip" [left end x, y, h, slant], "topEnd" x; the middle is black, and the map
  *             window is cut see-through while "holeWhen" is on ("hole", "holeInset", "holeRadius" as fill)
+ *   cdash     effect layer; the whole Curved theme (shaders.js cdash, layout made by tools/gen_curved.py), after BMW's newer
+ *             clusters (iDrive 8 / 8.5 Curved Display): "arc" [cx, cy, r, half sweep deg] (the left scale's circle, target
+ *             px; the right scale is its mirror), "band" px (the lit band inside the line), "ticks" [speed, rpm] (marks
+ *             between labels), "rpmMax" (8000; speed follows SPEED_SCALE), "fuelBar" / "oilBar" [x0, y, w] (thin level
+ *             bars), "base" [y at the ends, sag px, left end x] (the curved base line), optional "road" [horizonY, scale]
+ *             (a road while no map shows, its dashes running with the speed). The accent follows the drive mode: the
+ *             theme's "modes" { comfort, sport, sportplus, eco: { acc, acc2 } } (rgb 0-255), comfort before the car has
+ *             said. The map window as fill ("hole", "holeWhen", "holeInset", "holeRadius"); "mapLive" works with it.
  *   segbar    effect layer; "max" segments, the first round(signal) lit (e.g. "setupLevel:engine"), "slant" px
  *   icon      image layer; a line icon from icons.js ("icon": gauge, shock, wheel, cog, stack, therm, oilcan, fuel)
  *   arc also takes "start" and "sweep" in degrees (clockwise from 12 o'clock; negative = anticlockwise)
@@ -2126,6 +2134,22 @@ class HudApp {
             c.uniform(ref, 'u_strip', w.strip);
             c.uniform(ref, 'u_topEnd', [w.topEnd]);
             c.uniform(ref, 'u_road', w.road ? [w.road[0], w.road[1], 0, 1] : [0, 1, 0, 0]);
+        } else if (w.type === 'cdash') {
+            c.uniform(ref, 'u_size', [w.w, w.h]);
+            c.uniform(ref, 'u_arc', [w.arc[0] - w.x, w.arc[1] - w.y, w.arc[2], w.arc[3] * Math.PI / 180]);
+            c.uniform(ref, 'u_band', [w.band]);
+            c.uniform(ref, 'u_ticks', w.ticks);
+            const [redFrom, orange] = this._redMarks(w.rpmMax || 8000);
+            c.uniform(ref, 'u_red', [redFrom, orange]);
+            const bar = (b) => (b ? [b[0] - w.x, b[1] - w.y, b[2], 1] : [0, 0, 0, 0]);
+            c.uniform(ref, 'u_barL', bar(w.fuelBar));
+            c.uniform(ref, 'u_barR', bar(w.oilBar));
+            c.uniform(ref, 'u_hole', this._hole(w));
+            c.uniform(ref, 'u_holeR', [this._holeRadius(w)]);
+            c.uniform(ref, 'u_road', w.road ? [w.road[0] - w.y, w.road[1], 0, 1] : [0, 1, 0, 0]);
+            c.uniform(ref, 'u_base', w.base ? [w.base[0] - w.y, w.base[1], w.base[2] - w.x, 1] : [0, 0, 0, 0]);
+            c.uniform(ref, 'u_val', [0, 0, 0, 0]);
+            x.mode = null;      // the accent goes up with the first update
         } else if (w.type === 'mview') {
             // the left scale's line: points (layer px) and the arc length at each (the shader mirrors it for the right)
             const pts = [], cum = [];
@@ -2736,6 +2760,37 @@ class HudApp {
             x.c.uniform(x.ref, 'u_rpm', [vals[1]]);
             x.c.uniform(x.ref, 'u_fuel', [vals[2]]);
             x.c.uniform(x.ref, 'u_oil', [vals[3]]);
+        } else if (w.type === 'cdash') {
+            const us = this.setting('units') === 'us';
+            const sp = this._raw('speed'), rpm = this._raw('rpm'), fuel = this._raw('fuel'), oil = this._raw('oil');
+            const q = (v) => Math.round(Math.min(1, Math.max(0, v)) * 500) / 500;
+            const vals = [
+                q(isNum(sp) ? scaleFrac(us ? sp * 0.621371 : sp, SPEED_SCALE[us ? 'us' : 'metric']) : 0),
+                q(isNum(rpm) ? rpm / (w.rpmMax || 8000) : 0),
+                q(isNum(fuel) ? fuel : 0),
+                q(isNum(oil) ? (oil - 50) / 100 : 0),
+            ];
+            // the accent: the drive mode now (Sport Plus has its own), comfort until the car has said
+            const mode = this.driveMode === 'sport' && this.driveVariant === 'plus' ? 'sportplus' : (this.driveMode || 'comfort');
+            let phase = null;
+            if (w.road) {
+                const now = Date.now(), dt = x.roadT ? Math.min(1, (now - x.roadT) / 1000) : 0;
+                x.roadT = now;
+                x.roadPhase = ((x.roadPhase || 0) + (isNum(sp) ? Math.max(0, sp) / 3.6 : 0) * dt / ROAD_DASH_M) % 1;
+                phase = Math.round(x.roadPhase * 64) / 64;
+            }
+            const key = vals.join('|') + '|' + mode + '|' + phase;
+            if (!force && key === x.last) return;
+            x.last = key;
+            if (force || mode !== x.mode) {
+                x.mode = mode;
+                const modes = this.theme.modes || {};
+                const m = modes[mode] || modes.comfort || { acc: [79, 160, 255], acc2: [16, 52, 140] };
+                x.c.uniform(x.ref, 'u_acc', [m.acc[0] / 255, m.acc[1] / 255, m.acc[2] / 255]);
+                x.c.uniform(x.ref, 'u_acc2', [m.acc2[0] / 255, m.acc2[1] / 255, m.acc2[2] / 255]);
+            }
+            x.c.uniform(x.ref, 'u_val', vals);
+            if (w.road) x.c.uniform(x.ref, 'u_road', [w.road[0] - w.y, w.road[1], phase, 1]);
         } else if (w.type === 'vdash') {
             const T = w.tach, q = (v) => Math.round(Math.min(1, Math.max(0, v)) * 400) / 400;
             const frac = (g) => { const v = g && g.signal ? this._raw(g.signal) : null; return isNum(v) ? q((v - g.min) / (g.max - g.min)) : 0; };

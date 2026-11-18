@@ -911,6 +911,167 @@ void main() {
 `;
 
 
+const CDASH = `// The Curved theme in one cluster-render "effect" layer (GLSL ES 1.00), after the look of BMW's newer clusters
+// (iDrive 8 / 8.5 Curved Display, Drive layout): two thin bowed scales, speed left and revs right (the left one
+// mirrored), each a hairline with marks inside it, a band just inside the line that lights from 0 to the value like a
+// comet (dim at 0, bright at the needle) and a white needle with a glow; red line and amber dashes from the redline on
+// the revs. The accent colour follows the drive mode (u_acc / u_acc2, sent from hud.js). Fuel and oil as thin bars
+// inside the scales, a gently curved base line between them and, while no map shows, a road running to a soft horizon
+// glow in the middle. Pure black elsewhere (the car brightens dark tints, so no dark panels). v_uv (0,0) is the
+// top-left. The map window is cut see-through (u_hole) as in sdash.
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+varying vec2 v_uv;
+uniform vec2 u_size;
+uniform vec4 u_arc;       // the left scale's circle: centre x, y, radius, half the sweep (radians); the right one mirrored
+uniform float u_band;     // the lit band's width px, just inside the line
+uniform vec4 u_val;       // speed 0..1 along its scale, rpm 0..1, fuel 0..1, oil 0..1 (50..150 C)
+uniform vec2 u_red;       // where the red line and the amber dashes start on the revs, 0..1
+uniform vec2 u_ticks;     // marks: speed, rpm (intervals between labels)
+uniform vec3 u_acc;       // the drive mode's accent
+uniform vec3 u_acc2;      // its deep end (the band starts from it)
+uniform vec4 u_barL;      // the fuel bar: x0, y, width, on
+uniform vec4 u_barR;      // the oil bar: x0, y, width, on
+uniform vec4 u_hole;      // map window x, y, w, h, already inset (w 0 = none)
+uniform float u_holeR;    // its corner radius px
+uniform vec4 u_road;      // the road: horizon y, px scale, dash phase 0..1, on
+uniform vec4 u_base;      // the base line: y at its ends, how far it sags in the middle px, left end x, on
+
+const vec3 WHITE = vec3(0.95, 0.96, 0.99);
+const vec3 HOT = vec3(1.0, 0.17, 0.15);
+const vec3 AMBER = vec3(1.0, 0.7, 0.16);
+
+float cov(float d) { return clamp(0.5 - d, 0.0, 1.0); }
+vec4 over(vec4 top, vec4 under) {
+    float a = top.a + under.a * (1.0 - top.a);
+    if (a <= 0.0) return vec4(0.0);
+    return vec4((top.rgb * top.a + under.rgb * under.a * (1.0 - top.a)) / a, a);
+}
+
+// one scale in the left frame (q mirrored for the right one); rev 1: the rev counter (red zone)
+vec4 gauge(vec2 q, float val, float ticks, float rev, vec4 c) {
+    vec2 d = q - u_arc.xy;
+    float dist = length(d);
+    float s = u_arc.z - dist;                          // px inside the line (negative: outside it)
+    if (s < -40.0 || s > u_band + 40.0 || d.x > 0.0) return c;
+    float phi = atan(d.y, -d.x);                       // 0 at the outermost point, positive downwards
+    float t = (u_arc.w - phi) / (2.0 * u_arc.w);       // 0 at the bottom end, 1 at the top end
+    float px = dist * 2.0 * u_arc.w;                   // px along the line per unit of t
+    float along = min(t, 1.0 - t) * px;                // px inside the nearer end (negative: past it)
+    bool hot = rev > 0.5 && val >= u_red.x;
+    vec3 col = hot ? HOT : u_acc;
+
+    // the line: thin white, running on past both ends and fading out; red from the redline, amber dashes before it
+    float lw = 1.2, la = 0.5 * smoothstep(-110.0, 4.0, along);
+    vec3 lc = WHITE;
+    if (rev > 0.5 && t >= u_red.x && t <= 1.0) { lc = HOT; la = 1.0; lw = 2.4; }
+    else if (rev > 0.5 && t >= u_red.y && t < u_red.x && mod(t * px, 14.0) < 7.0) { lc = AMBER; la = 0.95; lw = 2.0; }
+    c = over(vec4(lc, la * cov(abs(s) - lw)), c);
+
+    // the band: dark accent at 0 brightening to the needle (a comet), with a soft glow outside the line
+    float bm = 2.0 + u_band * 0.5;
+    float inB = cov(abs(s - bm) - u_band * 0.5);
+    if (val > 0.002 && t >= 0.0 && t <= val) {
+        float f = t / val;
+        vec3 bc = mix(u_acc2, col, smoothstep(0.0, 0.9, f));
+        bc = mix(bc, WHITE, smoothstep(0.8, 1.0, f) * 0.55);
+        c = over(vec4(bc, mix(0.3, 1.0, f * f) * inB), c);
+        c = over(vec4(col, 0.5 * mix(0.15, 1.0, f) * exp(s / 6.0) * step(s, 0.0)), c);
+    }
+    // the band's inner edge, faint, so the unlit part still reads as a track
+    if (t >= 0.0 && t <= 1.0) c = over(vec4(WHITE, 0.16 * cov(abs(s - 2.0 - u_band) - 0.6)), c);
+
+    // the marks, inside the band: one at every label, a short one between
+    if (t > -0.005 && t < 1.005) {
+        float tk = t * ticks;
+        float dk = abs(tk - floor(tk + 0.5)) / ticks * px;
+        float dm = abs(tk * 2.0 - floor(tk * 2.0 + 0.5)) / (2.0 * ticks) * px;
+        float s0 = u_band + 6.0;
+        float maj = cov(dk - 1.1) * cov(abs(s - s0 - 6.0) - 6.0);
+        float mnr = cov(dm - 0.8) * cov(abs(s - s0 - 3.0) - 3.0);
+        bool red = rev > 0.5 && t >= u_red.x - 0.002;
+        c = over(vec4(red ? HOT : WHITE, max(maj * 0.9, mnr * 0.45)), c);
+    }
+
+    // the needle: a white bar across the band with the accent glowing round it
+    if (val > 0.002) {
+        float dn = abs(t - val) * px;
+        float sc = (u_band + 12.0) * 0.5, hl = (u_band + 32.0) * 0.5;
+        float span = cov(abs(s - sc) - hl);
+        c = over(vec4(col, 0.55 * exp(-dn / 7.0) * cov(abs(s - sc) - hl - 6.0)), c);
+        c = over(vec4(1.0, 1.0, 1.0, cov(dn - 1.6) * span), c);
+    }
+    return c;
+}
+
+// a thin level bar from x0 to x0 + w: a hairline track and a lit part; zones 0: fuel (red reserve), 1: oil (cold, hot)
+vec4 hbar(vec2 p, vec4 b, float v, float zones, vec4 c) {
+    if (b.w < 0.5) return c;
+    float x = p.x - b.x, dy = abs(p.y - b.y);
+    if (x < -6.0 || x > b.z + 6.0 || dy > 8.0) return c;
+    float inX = cov(-x) * cov(x - b.z);
+    c = over(vec4(WHITE, 0.32 * inX * cov(dy - 0.7)), c);
+    vec3 bc = WHITE;
+    if (zones < 0.5 && v < 0.15) bc = HOT;
+    if (zones > 0.5 && v < 0.25) bc = u_acc;
+    if (zones > 0.5 && v > 0.85) bc = HOT;
+    c = over(vec4(bc, step(0.001, v) * cov(-x) * cov(x - b.z * v) * cov(dy - 2.2)), c);
+    // the ends: short upright marks
+    c = over(vec4(WHITE, 0.6 * cov(dy - 6.0) * max(cov(abs(x) - 0.9), cov(abs(x - b.z) - 0.9))), c);
+    return c;
+}
+
+void main() {
+    vec2 p = v_uv * u_size;
+    vec2 pm = vec2(u_size.x - p.x, p.y);
+    vec4 c = vec4(0.0, 0.0, 0.0, 1.0);
+    float cx = u_size.x * 0.5;
+
+    // the base line: from the bottom of one scale to the other, sagging gently in the middle; it fades at its ends
+    float baseY = 1e4;
+    if (u_base.w > 0.5) {
+        float u = (p.x - cx) / (cx - u_base.z);
+        baseY = u_base.x + u_base.y * (1.0 - u * u);
+        if (abs(u) <= 1.0) c = over(vec4(WHITE, 0.42 * (1.0 - smoothstep(0.55, 1.0, abs(u))) * cov(abs(p.y - baseY) - 0.8)), c);
+    }
+
+    bool hole = u_hole.z > 0.0;
+    if (!hole && u_road.w > 0.5) {
+        // the horizon glow, then the road: edge lines and dashed lane lines in perspective, dashes running with the speed
+        vec2 g = (p - vec2(cx, u_road.x)) / vec2(420.0, 64.0);
+        c = over(vec4(u_acc, 0.24 * exp(-dot(g, g) * 2.2)), c);
+        float dy = p.y - u_road.x;
+        if (dy > 1.0 && p.y < baseY - 3.0) {
+            float xw = (p.x - cx) * u_road.y / dy;       // across, lanes 1 wide
+            float lp = dy / u_road.y;                    // screen px per lane
+            float fade = smoothstep(0.0, 90.0, dy) * (1.0 - smoothstep(-40.0, 0.0, p.y - baseY));
+            float hw = 0.8 + dy * 0.01;
+            float edge = cov(abs(abs(xw) - 1.5) * lp - hw);
+            float dash = step(fract(u_road.y * 120.0 / dy + u_road.z), 0.45);
+            float lane = cov(abs(abs(xw) - 0.5) * lp - hw) * dash;
+            c = over(vec4(WHITE, 0.75 * fade * max(edge, lane * 0.8)), c);
+        }
+    }
+
+    c = gauge(p, u_val.x, u_ticks.x, 0.0, c);
+    c = gauge(pm, u_val.y, u_ticks.y, 1.0, c);
+    c = hbar(p, u_barL, u_val.z, 0.0, c);
+    c = hbar(p, u_barR, u_val.w, 1.0, c);
+
+    // the map window: a rounded hole cut out of everything, so the map shows clean
+    if (hole) {
+        vec2 hs = u_hole.zw * 0.5;
+        vec2 q = abs(p - (u_hole.xy + hs)) - (hs - vec2(u_holeR));
+        float hd = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - u_holeR;
+        c.a *= clamp(hd + 0.5, 0.0, 1.0);
+    }
+    gl_FragColor = c;
+}
+`;
+
 const ATEXT = `// Atlas text for a cluster-render "effect" layer (GLSL ES 1.00): u_cells equal cells across the layer, each
 // showing one glyph of the R8 glyph atlas bound to u_font (u_grid.x columns by u_grid.y rows of cells), picked
 // by the codes in u_text (32 codes, 4 to a vec4; below 0 = empty). A new value is one uniform message, no
@@ -1739,4 +1900,4 @@ void main() {
 }
 `;
 
-module.exports = { shiftbar: SHIFTBAR, arc: ARC, revbar: REVBAR, lights: LIGHTS, fill: FILL, box: BOX, grid: GRID, segbar: SEGBAR, mdash: MDASH, mtach: MTACH, sdash: SDASH, boxes: BOXES, atext: ATEXT, meter: METER, gmeter: GMETER, revarc: REVARC, tiles: TILES, ribbon: RIBBON, deco: DECO, mview: MVIEW, vdash: VDASH };
+module.exports = { shiftbar: SHIFTBAR, arc: ARC, revbar: REVBAR, lights: LIGHTS, fill: FILL, box: BOX, grid: GRID, segbar: SEGBAR, mdash: MDASH, mtach: MTACH, sdash: SDASH, boxes: BOXES, atext: ATEXT, meter: METER, gmeter: GMETER, revarc: REVARC, tiles: TILES, ribbon: RIBBON, deco: DECO, mview: MVIEW, vdash: VDASH, cdash: CDASH };

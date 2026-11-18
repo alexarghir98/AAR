@@ -2,6 +2,12 @@
 
 Newest first. Dates are when the build was pushed.
 
+## Nov 18 2026
+
+- **Cluster Themes 0.19.1:**
+  - **New theme: Curved,** after BMW's newer clusters (iDrive 8 / 8.5 Curved Display). Thin bowed scales for speed and revs, each with a band that lights up to the needle, the speed and range inside the left scale, the gear, drive mode and oil temperature inside the right one, and a road to a soft horizon in the middle. The colours follow the drive mode: blue in Comfort, orange-red in Sport, red in Sport Plus, teal in Eco Pro. With "Show Waze map inside the theme" on, the map shows in the middle without the theme being built again.
+  - Not yet tested on a car.
+
 ## Nov 15 2026
 
 - **Cluster Themes 0.19.0, HUD Widgets 0.15.0:**
