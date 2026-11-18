@@ -2,6 +2,10 @@
 
 Newest first. Dates are when the build was pushed.
 
+## Nov 18 2026: AAR Cluster Themes 1.2.1
+
+- **Installs again on units without the car's now playing.** The MGU Store refused 1.2.0 ("HmiMediaState instance 1 is not on this unit", G30 LCI): the app no longer asks for it. The Vector theme's panel shows average speed, peak boost and lateral G instead of the song.
+
 ## Nov 18 2026: AAR Cluster Themes 1.2.0
 
 - **New themes: Lame and Bumerang,** AAR's own blade dashes. Speed on a blue blade at the left and revs on a red one at the right, each a solid glowing fill up to a white marker, with the numbers along the inner side. Lame's blades lean straight in; Bumerang's bend once like a boomerang, with stronger colours and glows. The speed and the gear in big figures with two-tone stripes, boost, oil, coolant and fuel readouts with bars, and a see-through dark blue panel in the middle that frames the Waze map (a road runs there while no map shows). Under the range, a simple fuel bar from empty to full, red in reserve. Romanian labels.

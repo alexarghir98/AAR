@@ -105,11 +105,11 @@ The look of the M view in the newer M cars' Live Cockpit (M3, M4, M5), for any c
 
 ### Vector
 
-A race-sim style dash with angled frames and a music panel.
+A race-sim style dash with angled frames.
 
 - **Left:** a round rev counter in segments, 0 to 8000 rpm, red from your redline, with the speed and the gear inside it.
 - **Middle:** boost, torque and power as bars. With "Show Waze map inside the theme" on, the map shows here instead.
-- **Right:** coolant, oil, fuel and boost as rings, and the music panel: the song that is playing with its title, artist and time, read from the car's own now playing. When nothing is playing, the panel shows average speed, peak boost and lateral G instead. The music panel is experimental: please tell us in an issue whether it works with your sources (radio, Bluetooth, USB, CarPlay).
+- **Right:** coolant, oil, fuel and boost as rings, and a panel with average speed, peak boost and lateral G. (bimmer-lab's version shows the song that is playing there; AAR leaves that out, as the MGU Store won't install an app that asks for the car's now playing on units that don't offer it, such as the G30's.)
 - **Bottom:** the clock, range and outside temperature, with BMW's own gear letter.
 
 <p align="center"><img src="../../docs/images/cluster-vector.png" width="900" alt="Vector theme"></p>

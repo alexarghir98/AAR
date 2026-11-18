@@ -820,13 +820,11 @@ class HudApp {
                 },
             },
         };
-        // now playing (the Vector layouts' music panel): the head unit's own media state, front screen only. Optional
-        // (app.json): not every unit may have it, and whether CarPlay fills it is not known yet. Added last, so the
-        // one-at-a-time SOME/IP setup (signals.js) reaches every vehicle signal before it, whatever this one does
-        extra[MEDIA_IF] = {
-            playerMetadata: (v) => this._mediaFeed('meta', v),
-            trackProgress: (v) => this._mediaFeed('progress', v),
-        };
+        // now playing (the Vector layouts' music panel, HmiMediaState) is not asked for in AAR (1.2.1): the MGU Store
+        // refuses to install an app whose SOME/IP manifest names an interface instance the unit lacks, and a G30 LCI's
+        // MGU has no HmiMediaState instance 1. Vector's panel shows its trip readouts instead. To bring it back on a
+        // unit that has it: add the interface to app.json "signals" again and subscribe here (extra[MEDIA_IF] =
+        // { playerMetadata: (v) => this._mediaFeed('meta', v), trackProgress: (v) => this._mediaFeed('progress', v) }).
         this.car = new Car(this.ctx, ['rpm', 'speed', 'temps', 'accel', 'gear', 'torque'], extra);
         // "Play demo": this.car becomes the show's stand-in (the car's own data unless the show plays)
         this.demo = new DemoShow(this.car, this._demoHooks(), this.log);

@@ -2,7 +2,7 @@
   "id": "aar_cluster_themes",
   "title": "AAR Cluster Themes",
   "description": "AAR Cluster Themes: redraws the instrument cluster. Curved (after BMW's newer iDrive 8 clusters, colours by drive mode), Apex (AAR's sport dash with tyres), GT3 race dash, M-style, M view, Vector, Sport, Minimal, Track, Drag, Rally, Retro 80s, Cruise, Dyno or Ribbon. Based on bimmer-lab's Cluster Themes (MIT)",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "vendor": "custom",
   "loggingId": "AAR1",
   "iconGlyph": "AAR",
@@ -77,11 +77,6 @@
       "dataDisplayGearbox": "s",
       "controlDisplayMSystems": "rs",
       "_optional": "S or M next to the gear; controlDisplayMSystems: an M car's drive mode (issue #8)"
-    },
-    "de.bmw.infotainment.hmi.hmimediastate.HmiMediaState": {
-      "playerMetadata": "rs",
-      "trackProgress": "rs",
-      "_optional": "now playing (title, artist, progress) in the Vector theme's music panel"
     },
     "de.bmw.infotainment.vehicle.TPMS": {
       "statusTyrePressure": "rs",
