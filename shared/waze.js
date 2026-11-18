@@ -18,6 +18,13 @@
  *  - when no longer wanted, and only if WE moved it, sends "start map" once so Waze is back where it was (the
  *    panel shares its scene with the HUD, so leaving it there would block HUD Widgets and Waze's HUD map).
  * "start" isn't saved by waze-on-cluster (a restart of its service puts it back on "map"); we just send it again.
+ *
+ * Maps on cluster 0.10 (robertnisipeanu/idrive-apps, waze-on-cluster 0.10.11 read Nov 18 2026) has no "start" and no
+ * "panel" any more: its commands are guide / cluster / hud, and the map stays on the "map" target (BMW's map slot,
+ * shown while the car's Instrument cluster > Central display area is Map view). An app may only take it into its own
+ * scene through cluster-render's "host" op, which needs a RAMSES scene file. Its status line tells it apart (it has
+ * "cluster"): with it we send nothing, and the map counts as up while it shows on "map", so the theme cuts its
+ * window over BMW's map slot and the map shows through (BMW's map-view overlay with it, as before 0.9).
  * Never sent: "cluster" (would turn the map off), "guide" (saved by the tool). Never touched: patch.sock (root).
  * Facts from the waze-on-cluster 0.9.3 source (main.cpp, control.cpp, map_feed.cpp, the .socket unit), read
  * Nov 7 2026. Plain Node 8 (the car's 8.16.2).
@@ -64,7 +71,7 @@ class Waze {
     /** Stop polling; if we moved the map, ask once for it back on "map" (best effort: the process may be exiting). */
     stop() {
         clearInterval(this.timer);
-        if (this.moved && this.st && this.st.target === 'panel') this._send('map');
+        if (this.moved && this.st && !this.st.modern && this.st.target === 'panel') this._send('map');
     }
 
     /** Whether the theme wants the map on the panel now (the setting, and a layout with a map window). */
@@ -83,6 +90,14 @@ class Waze {
         if (s.state === 'unsupported') return { text: 'Waze on Cluster: this car isn\'t supported', up: false, ok: false };
         if (s.state === 'off') return { text: 'Waze map is turned off in the Waze app', up: false, ok: false };
         if (!this.wanted) return { text: 'Off. Waze shows the map in BMW\'s own map view', up: false, ok: true };
+        if (s.modern) {
+            // Maps on cluster 0.10: the map stays in BMW's map slot; the theme's window opens over it while it shows
+            if (!s.cluster) return { text: 'The cluster map is off in Maps on cluster', up: false, ok: false };
+            if (s.state === 'showing') return { text: 'Map showing in the theme', up: true, ok: true };
+            if (s.state === 'frozen') return { text: 'Map frozen, waiting for the phone', up: false, ok: false };
+            if (s.state === 'error') return { text: 'Maps on cluster reports an error', up: false, ok: false };
+            return { text: 'Waiting for the map (start navigation; cluster on Map view)', up: false, ok: true };
+        }
         if (s.target !== 'panel') {
             if (this.problem === 'busy') return { text: 'Waze app is open, retrying', up: false, ok: false };
             if (this.problem) return { text: 'Can\'t reach Waze on Cluster (' + this.problem + ')', up: false, ok: false };
@@ -99,7 +114,13 @@ class Waze {
             if (err || Date.now() - st.mtime.getTime() > STALE_MS) return this._update(null);
             fs.readFile(this.statusPath, 'utf8', (e, txt) => {
                 let s = null;
-                try { if (!e) { const j = JSON.parse(txt); s = { state: String(j.state || ''), target: j.target == null ? null : String(j.target) }; } } catch (x) { s = null; }
+                try {
+                    if (!e) {
+                        const j = JSON.parse(txt);
+                        s = { state: String(j.state || ''), target: j.target == null ? null : String(j.target),
+                            modern: Object.prototype.hasOwnProperty.call(j, 'cluster'), cluster: j.cluster !== 0 };
+                    }
+                } catch (x) { s = null; }
                 this._update(s);
             });
         });
@@ -109,7 +130,7 @@ class Waze {
         this.st = s;
         if (s && s.target === 'map' && !this.wanted && this.moved) this._setMoved(false);   // it's back
         if (s && s.target === 'panel' && this.problem) this.problem = null;
-        const up = !!(this.wanted && s && s.target === 'panel' && s.state === 'showing');
+        const up = !!(this.wanted && s && s.state === 'showing' && (s.target === 'panel' || (s.modern && s.cluster && s.target === 'map')));
         const text = this.info().text;
         const changed = up !== this.up || text !== this.lastText;
         this.up = up;
@@ -121,7 +142,7 @@ class Waze {
     _sync() {
         const s = this.st;
         if (this.sending || Date.now() < this.nextTry || !s) return;
-        if (s.state === 'unsupported' || s.state === 'off') return;
+        if (s.state === 'unsupported' || s.state === 'off' || s.modern) return;    // 0.10: nothing to send (see the header)
         if (this.wanted && s.target !== 'panel') this._send('panel');
         else if (!this.wanted && this.moved && s.target === 'panel') this._send('map');
     }

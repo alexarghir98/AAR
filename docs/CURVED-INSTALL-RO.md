@@ -26,7 +26,7 @@
 2. Instalează **AAR Cluster Themes**. Store-ul construiește aplicația direct pe mașină. SDK-ul BMW îl ia de pe unitatea ta, nu e în repository.
 3. Deschide **AAR Cluster Themes** din meniul de aplicații:
    - **Lame** e deja aleasă pentru Comfort, **Bumerang** pentru Sport și **Curved** pentru Eco Pro. **Apex** (tema sport cu roțile) se alege din listă.
-   - **Show Waze map inside the theme** e deja pornit: cu Waze on Cluster pornit, harta apare în panoul din mijloc al temelor Lame și Bumerang.
+   - **Show Waze map inside the theme** e deja pornit. Ca să apară harta în panoul din mijloc: ai instalat **Maps on cluster** (fostul Waze on Cluster), pornești navigația pe telefon, iar în setările mașinii pui **Instrument cluster > Central display area** pe **Map view**.
    - Unitățile sunt deja km/h, °C și bar.
    - Pune **Redline** la turația maximă a motorului tău.
    - Ceasul e deja pe 24 de ore, cu fusul orar Eastern Europe (România, cu ora de vară inclusă).

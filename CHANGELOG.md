@@ -2,6 +2,11 @@
 
 Newest first. Dates are when the build was pushed.
 
+## Nov 18 2026: AAR Cluster Themes 1.2.2
+
+- **The Waze map shows inside the theme again with Maps on cluster 0.10.** It no longer takes the "start panel" command the app sent (the theme stayed on "Moving the map into the theme"); its map stays in BMW's map slot. The theme now opens its window over that slot while the map shows. Needs the car's Instrument cluster > Central display area on Map view; BMW's map-view marks show in the window too.
+- The Map tab says what it waits for (navigation, Map view) and lists the themes with a map window.
+
 ## Nov 18 2026: AAR Cluster Themes 1.2.1
 
 - **Installs again on units without the car's now playing.** The MGU Store refused 1.2.0 ("HmiMediaState instance 1 is not on this unit", G30 LCI): the app no longer asks for it. The Vector theme's panel shows average speed, peak boost and lateral G instead of the song.

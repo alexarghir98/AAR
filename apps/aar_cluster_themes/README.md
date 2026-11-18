@@ -83,7 +83,7 @@ AAR's own blade themes, blue for speed and red for revs, with the Waze map frame
 - **Left and right:** speed on a blue blade, revs on a red one, each a solid fill from the bottom up to a white marker, glowing (more in Sport, less in Eco Pro). Marks and numbers run along the inner side; the number nearest the value lights up white. Speed on BMW's spacing (0 to 200 mph or 0 to 320 km/h), revs 0 to 8000, amber and then red from your redline.
 - **Lame** leans its blades straight in towards the top. **Bumerang** bends them once, like a boomerang pointing out to the screen edge, with stronger colours and glows and a bluer middle panel.
 - **Beside them:** the speed (VITEZĂ) and the gear (TREAPTĂ) in big figures with the drive mode under the gear, two-tone stripes, and boost, oil, coolant and fuel readouts with thin bars (the fuel bar turns amber in reserve).
-- **Middle:** a see-through dark blue panel. With "Show Waze map inside the theme" on and Waze on Cluster running, the map shows in it; otherwise a road runs there with the speed.
+- **Middle:** a see-through dark blue panel. With "Show Waze map inside the theme" on, Maps on cluster running, navigation going and the car's Central display area on Map view, the map shows in it; otherwise a road runs there with the speed.
 - **Bottom:** the clock, the range with a fuel bar under it (empty at the left, full at the right, red in reserve), and the outside temperature, with BMW's own gear letter.
 - The labels are in Romanian.
 
@@ -180,7 +180,7 @@ More themes are on the way.
 
 - **Theme**, and one per drive mode.
 - **Readouts:** pick which car sensor each GT3, M, Track, Drag, Rally, Retro 80s or Dyno readout shows (speed, rpm, boost, temperatures, tyres, fuel, g, power and more). Plug-in hybrids can also show **Hybrid battery**, the high-voltage battery's charge in % (not yet checked on a hybrid).
-- **Show Waze map inside the theme:** GT3, Sport and M open a window in the middle and Waze on Cluster draws its map in it, above BMW's own map view, so nothing shows twice. When the map goes away the theme fills back in. While it is on, Waze's map on the HUD is off. Needs robertnisipeanu's Waze on Cluster; turning it off gives Waze its usual place back.
+- **Show Waze map inside the theme:** while the phone's map shows on the cluster, a theme with a map window (Lame, Bumerang, Curved, Apex, GT3, Sport, M, M view, Vector) opens it and the map shows through. Needs robertnisipeanu's **Maps on cluster** (formerly Waze on Cluster) and the car's **Instrument cluster > Central display area** set to **Map view**; BMW's own map-view marks show in the window too. When the map goes away the theme fills back in. (Maps on cluster 0.10 no longer moves its map into a theme's scene as 0.9 did, so the window opens over BMW's map slot instead.)
 - **Badge:** the model name, like "BMW X3 M40i", as text in the theme's font (GT3 top left, Sport, M and Minimal top centre, where BMW puts its own). Off by default.
 - **Warnings:** oil, coolant and boost limits. A readout over its limit flashes red (oil 130°C and coolant 115°C by default, boost off).
 - **Test the shift lights:** runs the rpm up to the shift point for about 4 seconds while the car stands.
