@@ -115,7 +115,7 @@ CLUSTER_FONTS = [
     ('k_label', 'Outfit[wght].ttf', 22, UPPER + DIGITS + ' .-+', 0, 'Medium'),
     ('k_val', 'Outfit[wght].ttf', 34, DIGITS + '.:-+° ', 0, 'Light'),
 ]
-FONTS = {'idrive_hud_widgets': HUD_FONTS, 'cluster_themes': CLUSTER_FONTS}
+FONTS = {'aar_cluster_themes': CLUSTER_FONTS}   # HUD_FONTS: kept from upstream (HUD Widgets is not in this repo)
 PAD = 2
 ATLAS_W = 1024
 

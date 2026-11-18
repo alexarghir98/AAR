@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""gen_curved.py - writes apps/cluster_themes/hud/layouts/curved.json, the Curved theme (after BMW's newer
+"""gen_curved.py - writes apps/aar_cluster_themes/hud/layouts/curved.json, the Curved theme (after BMW's newer
 clusters, iDrive 8 / 8.5 Curved Display, Drive layout). Edit the numbers here and run it again; don't edit the JSON.
 
     python3 tools/gen_curved.py
@@ -15,8 +15,8 @@ import math
 import os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, 'apps', 'cluster_themes', 'hud', 'layouts', 'curved.json')
-FONTS = os.path.join(ROOT, 'apps', 'cluster_themes', 'hud', 'fonts')
+OUT = os.path.join(ROOT, 'apps', 'aar_cluster_themes', 'hud', 'layouts', 'curved.json')
+FONTS = os.path.join(ROOT, 'apps', 'aar_cluster_themes', 'hud', 'fonts')
 
 W, H = 1920, 720
 TOP = 660                      # the shader's height; the bottom row (clock, coolant, outside) is under it

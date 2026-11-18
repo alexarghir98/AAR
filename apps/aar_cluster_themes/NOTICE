@@ -1,7 +1,9 @@
-Cluster Themes - third-party notices
-=====================================
+AAR Cluster Themes - third-party notices
+=========================================
 
-The app's own code is MIT, Copyright (c) 2026 bimmer-lab (LICENSE in the repository).
+AAR Cluster Themes is a fork of bimmer-lab's Cluster Themes (https://github.com/bimmer-lab/apps).
+The app's own code is MIT, Copyright (c) 2026 bimmer-lab, and the AAR changes (the Curved theme, the
+AAR app id and defaults) Copyright (c) 2026 AAR, same licence (LICENSE in the repository).
 Besides its own code, the app ships with:
 
 1. cauliflowermossgrape's MGU App Kit (kit/ in the package): MIT,

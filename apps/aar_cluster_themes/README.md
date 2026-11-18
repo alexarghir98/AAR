@@ -1,8 +1,10 @@
-# Cluster Themes
+# AAR Cluster Themes
 
-<img src="icon.png" width="72" align="left" alt="Cluster Themes icon">
+<img src="icon.png" width="72" align="left" alt="AAR Cluster Themes icon">
 
-Redraws the whole instrument cluster in a theme of your choice. Open **Cluster Themes** from the apps menu on the center screen: its own page has the themes with pictures, the readouts, the badge, the Waze map, warnings and settings.
+Based on bimmer-lab's Cluster Themes (MIT), with its own app id (`aar_cluster_themes`) so both can be installed, and the new **Curved** theme as the default.
+
+Redraws the whole instrument cluster in a theme of your choice. Open **AAR Cluster Themes** from the apps menu on the center screen: its own page has the themes with pictures, the readouts, the badge, the Waze map, warnings and settings.
 
 <p align="center"><img src="../../docs/images/cluster-gt3.gif" width="900" alt="GT3 race dash"></p>
 

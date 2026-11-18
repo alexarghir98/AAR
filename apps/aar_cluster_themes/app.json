@@ -1,11 +1,11 @@
 {
-  "id": "cluster_themes",
-  "title": "Cluster Themes",
-  "description": "Redraws the instrument cluster: GT3 race dash, M-style, M view, Vector (with a music panel), Sport, Curved (iDrive 8 look), Minimal, Track, Drag, Rally, Retro 80s, Cruise, Dyno (BMW-coloured readout tiles) or Ribbon (with holiday editions), with shift lights, boost, temps, tyres, a G-meter and a 0-60 timer",
-  "version": "0.19.1",
+  "id": "aar_cluster_themes",
+  "title": "AAR Cluster Themes",
+  "description": "AAR Cluster Themes: redraws the instrument cluster. Curved (after BMW's newer iDrive 8 clusters, colours by drive mode), GT3 race dash, M-style, M view, Vector, Sport, Minimal, Track, Drag, Rally, Retro 80s, Cruise, Dyno or Ribbon. Based on bimmer-lab's Cluster Themes (MIT)",
+  "version": "1.0.0",
   "vendor": "custom",
-  "loggingId": "OAC1",
-  "iconGlyph": "CLU",
+  "loggingId": "AAR1",
+  "iconGlyph": "AAR",
   "shared": [
     "hud.js",
     "hud_text.js",
@@ -114,7 +114,7 @@
       "key": "hudLayout",
       "label": "Theme (when not by drive mode)",
       "type": "choice",
-      "default": "gt3",
+      "default": "curved",
       "options": [
         [
           "off",
@@ -196,7 +196,7 @@
       "key": "inComfort",
       "label": "In Comfort",
       "type": "choice",
-      "default": "off",
+      "default": "curved",
       "options": [
         [
           "off",
@@ -264,7 +264,7 @@
       "key": "inSport",
       "label": "In Sport",
       "type": "choice",
-      "default": "gt3",
+      "default": "curved",
       "options": [
         [
           "off",
@@ -332,7 +332,7 @@
       "key": "inEco",
       "label": "In Eco Pro",
       "type": "choice",
-      "default": "off",
+      "default": "curved",
       "options": [
         [
           "off",
@@ -406,7 +406,7 @@
       "key": "units",
       "label": "Units",
       "type": "choice",
-      "default": "us",
+      "default": "metric",
       "options": [
         [
           "us",
@@ -422,7 +422,7 @@
       "key": "clock",
       "label": "Clock",
       "type": "choice",
-      "default": "12h",
+      "default": "24h",
       "options": [
         [
           "12h",
@@ -438,7 +438,7 @@
       "key": "timeZone",
       "label": "Time zone (clock)",
       "type": "number",
-      "default": -9999,
+      "default": 10013,
       "steps": [
         -9999,
         10001,

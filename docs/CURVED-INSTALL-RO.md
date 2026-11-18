@@ -1,6 +1,6 @@
-# Tema Curved: cum o pui pe mașină
+# AAR Cluster Themes: cum o pui pe mașină
 
-Tema **Curved** e o temă nouă în Cluster Themes (fork după bimmer-lab/apps). Arată ca clusterele BMW noi (iDrive 8 / 8.5, Curved Display) și merge pe iDrive 7 (MGU).
+**AAR Cluster Themes** e un fork după Cluster Themes de la bimmer-lab, dar are id-ul lui propriu: `aar_cluster_themes`. Așa poate sta pe unitate lângă aplicația bimmer-lab fără conflict. Tema implicită e **Curved**, în stilul clusterelor BMW noi (iDrive 8 / 8.5). Culorile se schimbă după modul de condus.
 
 ## Ce trebuie să ai deja
 
@@ -9,38 +9,45 @@ Tema **Curved** e o temă nouă în Cluster Themes (fork după bimmer-lab/apps).
 
 ## 1. Pune proiectul pe GitHub
 
-1. Pe github.com fă un repository nou, de exemplu `bmw-cluster-curved`. Poate fi public sau privat, dar Store-ul citește cel mai simplu unul public.
-2. Din folderul acesta rulează:
+1. Pe github.com fă un repository nou, gol, cu numele `aar-cluster-themes`. Fără README, fără licență. Fă-l **public**, ca Store-ul să-l poată citi.
+2. Din Terminal, în folderul proiectului:
 
    ```sh
-   git remote set-url origin https://github.com/<userul-tau>/bmw-cluster-curved.git
+   cd ~/Documents/"Proiecte Coding BMW"/"AAR Cluster Themes"
+   git remote add origin https://github.com/<userul-tau>/aar-cluster-themes.git
    git push -u origin main
    ```
 
+   Dacă GitHub cere parolă, folosește un Personal Access Token, nu parola contului. Sau rulează `gh auth login` dacă ai GitHub CLI.
+
 ## 2. Instalează din MGU Store
 
-1. Dacă ai deja **Cluster Themes** de la sursa `bimmer-lab/apps`, dezinstalează-l întâi. Store-ul actualizează o aplicație doar din sursa de unde a venit. Altfel o instalează pe a ta separat, cu id-ul `cluster_themes2`.
-2. În Store mergi la **Settings → Add source** și scrie `<userul-tau>/bmw-cluster-curved`.
-3. Instalează **Cluster Themes**. Store-ul construiește aplicația direct pe mașină din cod. SDK-ul BMW îl ia de pe unitatea ta, nu e în repository.
-4. Deschide **Cluster Themes** din meniul de aplicații. La **Themes** alege **Curved**.
-   - **Settings → Units** pune pe km/h, °C, bar.
-   - **Redline** pune turația maximă a motorului tău.
-   - Dacă vrei ca tema să rămână Curved în toate modurile, setează **In Comfort / In Sport / In Eco Pro** pe Curved. Culorile se schimbă singure după mod.
+1. În Store mergi la **Settings → Add source** și scrie `<userul-tau>/aar-cluster-themes`.
+2. Instalează **AAR Cluster Themes**. Store-ul construiește aplicația direct pe mașină. SDK-ul BMW îl ia de pe unitatea ta, nu e în repository.
+3. Deschide **AAR Cluster Themes** din meniul de aplicații:
+   - **Curved** e deja ales pentru Comfort, Sport și Eco Pro.
+   - Unitățile sunt deja km/h, °C și bar.
+   - Pune **Redline** la turația maximă a motorului tău.
+   - Ceasul e deja pe 24 de ore, cu fusul orar Eastern Europe (România, cu ora de vară inclusă).
+4. Dacă ai instalat și Cluster Themes de la bimmer-lab, pune-l pe **Off (BMW's own cluster)**. Folosește o singură aplicație de cluster odată.
 
 ## Test pe Mac, fără mașină
 
 ```sh
-node bench/server.js cluster_themes     # apoi deschide http://localhost:8078
+node bench/server.js      # apoi deschide http://localhost:8078
 ```
 
-Ai nevoie de `node` și `python3`. La Themes alegi Curved. Cu butoanele COMFORT / SPORT / SPORT+ / ECO PRO vezi culorile, iar cu sliderele schimbi viteza și turația.
+Ai nevoie de `node` și `python3`. Cu butoanele COMFORT / SPORT / SPORT+ / ECO PRO vezi culorile, iar cu sliderele schimbi viteza și turația.
 
 ## Modificări
 
-Geometria temei e în `tools/gen_curved.py`. Modifici acolo și rulezi `python3 tools/gen_curved.py`, nu modifici JSON-ul de mână. Desenul e shader-ul `cdash` din `shared/shaders.js`, iar culorile pe moduri sunt în `shared/hud_themes.js` (tema `curved`, `modes`).
+- **Geometria temei** e în `tools/gen_curved.py`. Modifici acolo și rulezi `python3 tools/gen_curved.py`, nu modifici JSON-ul de mână.
+- **Desenul** e shader-ul `cdash` din `shared/shaders.js`.
+- **Culorile pe moduri** sunt în `shared/hud_themes.js`, la tema `curved`, în `modes`.
+- **O versiune nouă:** crești `version` în `apps/aar_cluster_themes/app.json`, faci commit și `git push`. Store-ul îți oferă actualizarea.
 
 ## Atenție
 
-- Tema a fost testată doar pe bench, nu încă pe mașină. Prima dată verifică dacă se vede tot pe cluster.
+- Tema a fost testată doar pe bench, nu încă pe mașină. Prima dată verifică dacă se vede tot pe cluster, mai ales colțurile de sus.
 - Aplicația doar citește date (viteză, turație, temperaturi). Nu trimite comenzi la module.
-- Dacă vrei să revii la clusterul BMW: în aplicație alegi **Off (BMW's own cluster)**, sau o dezinstalezi din Store.
+- Dacă vrei înapoi clusterul BMW: în aplicație alegi **Off (BMW's own cluster)**, sau o dezinstalezi din Store.
